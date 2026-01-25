@@ -5,9 +5,6 @@
 	import { get_invoice_for_month } from '$lib/funcs/income.remote';
 	import { get_settings, set_settings } from '$lib/funcs/settings.remote';
 
-	const this_month = new Date().getMonth() + 1;
-	const this_year = new Date().getFullYear();
-
 	const year = $derived(page.params.year) as string;
 	const month = $derived(page.params.month) as string;
 
