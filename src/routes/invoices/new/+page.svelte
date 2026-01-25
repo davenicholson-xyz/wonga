@@ -1,68 +1,44 @@
 <script lang="ts">
-	import { create_customer, create_invoice, get_customers } from '../invoices.remote';
+	import { create_invoice } from '$lib/funcs/invoices.remote';
+	import CustomerSelect from '$lib/components/CustomerSelect.svelte';
+	import DateSelect from '$lib/components/DateSelect.svelte';
+	import InvoiceItems from '$lib/components/InvoiceItems.svelte';
+	import InvoiceNumber from '$lib/components/InvoiceNumber.svelte';
 
-	let newCustomerModal: HTMLDialogElement;
-	function openNewCustomerModal() {
-		newCustomerModal.showModal();
-	}
-	function closeNewCustomerModal() {
-		newCustomerModal.close();
-	}
-
-	$effect(() => {
-		if (create_customer.result) {
-			closeNewCustomerModal();
-		}
-	});
-
-	let invoiceDate = $state(new Date().toISOString().split('T')[0]);
-	let dueDays = $state(30);
-	let dueDate = $derived(
-		new Date(new Date(invoiceDate).getTime() + dueDays * 24 * 60 * 60 * 1000)
-			.toISOString()
-			.split('T')[0]
-	);
+	let invoiceNumber = $state<number>(0);
+	let selectedCustomer = $state<string>('');
+	let invoiceDate = $state<string>('');
+	let dueDate = $state<string>('');
+	let items = $state<string>('');
+	let itemsTotal = $state(0);
 </script>
 
 <h1>New Invoice</h1>
 
+<div>
+	<InvoiceNumber bind:value={invoiceNumber} />
+</div>
+<div>
+	<CustomerSelect bind:value={selectedCustomer} />
+</div>
+
+<div>
+	<DateSelect bind:invoiceDate bind:dueDate />
+</div>
+
+<div>
+	<InvoiceItems bind:value={items} bind:total={itemsTotal} />
+</div>
+
 <form {...create_invoice}>
-	<label>
-		<select {...create_invoice.fields.customer_id.as('text')}>
-			{#each await get_customers() as customer (customer.id)}
-				<option value={customer.id}>{customer.name}</option>
-			{/each}
-		</select>
-	</label>
-	<button onclick={openNewCustomerModal}>add customer</button>
+	<div style="display: none">
+		<input {...create_invoice.fields.invoice_number.as('number')} bind:value={invoiceNumber} />
+		<input {...create_invoice.fields.customer_id.as('text')} bind:value={selectedCustomer} />
+		<input {...create_invoice.fields.invoice_date.as('text')} bind:value={invoiceDate} />
+		<input {...create_invoice.fields.due_date.as('text')} bind:value={dueDate} />
+		<input {...create_invoice.fields.items.as('text')} bind:value={items} />
+		<input {...create_invoice.fields.total.as('number')} bind:value={itemsTotal} />
+	</div>
 
-	<hr />
-
-	<label>
-		Invoice date:
-		<input {...create_invoice.fields.invoice_date.as('date')} bind:value={invoiceDate} />
-		<span>
-			due in <input type="number" bind:value={dueDays} /> days
-		</span>
-		<input {...create_invoice.fields.due_date.as('date')} bind:value={dueDate} />
-	</label>
+	<button type="submit">Create Invoice</button>
 </form>
-
-<dialog bind:this={newCustomerModal}>
-	<button onclick={closeNewCustomerModal}>close</button>
-	<form {...create_customer}>
-		<label>
-			Name:
-			<input {...create_customer.fields.name.as('text')} />
-		</label>
-		<label>
-			Address:
-			<textarea {...create_customer.fields.address.as('text')}></textarea>
-		</label>
-		<label>
-			Email:
-			<input {...create_customer.fields.email.as('email')} />
-		</label>
-		<button type="submit">Create Customer</button>
-	</form>
-</dialog>
