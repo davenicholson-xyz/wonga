@@ -3,6 +3,7 @@
 	import { page } from '$app/state';
 
 	import { get_invoice_for_month } from '$lib/funcs/income.remote';
+	import { get_settings, set_settings } from '$lib/funcs/settings.remote';
 
 	const this_month = new Date().getMonth() + 1;
 	const this_year = new Date().getFullYear();
@@ -18,7 +19,12 @@
 
 	const current_month_year = $derived({ month: parseInt(month), year: parseInt(year) });
 
-	let tax_percent = $state<number>(25);
+	const saved_tax_percent = await get_settings({ key: 'tax_percent' });
+	let tax_percent = $state<number>(parseInt(saved_tax_percent?.value) || 25);
+
+	async function set_tax_percent() {
+		await set_settings({ key: 'tax_percent', value: tax_percent.toString() });
+	}
 
 	const formatCurrency = (amount: number) =>
 		new Intl.NumberFormat('en-GB', {
@@ -71,21 +77,16 @@
 </div>
 
 {#snippet incomecard(invoice)}
+	<!-- {@const dueIn = new Date(invoice.due_date).getTime() - Date.now()}
+	{@const dueInDays = Math.ceil(dueIn / (1000 * 60 * 60 * 24))} -->
 	<div class="card bg-base-100 shadow-sm mb-3 mx-8">
-		<div class="card-body p-4 flex-row items-center justify-between">
-			<div>
-				<h3 class="card-title text-base">INV-{invoice.invoice_number}</h3>
-				<p class="text-sm opacity-70">
-					Due: {new Date(invoice.due_date).toLocaleDateString('en-GB')}
-				</p>
+		<div class="card-body p-4">
+			<div class="flex items-center justify-between">
+				<p class="text-xs opacity-70">{new Date(invoice.due_date).toLocaleDateString('en-GB')}</p>
 			</div>
-			<div class="flex items-center gap-3">
-				{#if invoice.paid}
-					<span class="badge badge-success">Paid</span>
-				{:else}
-					<span class="badge badge-warning">Unpaid</span>
-				{/if}
-				<span class="text-lg font-bold">{formatCurrency(invoice.total)}</span>
+			<div class="flex items-center justify-between">
+				<span class="font-medium text-lg">INV-{invoice.invoice_number}</span>
+				<span class="text-xl font-bold">{formatCurrency(invoice.total)}</span>
 			</div>
 		</div>
 	</div>
@@ -114,6 +115,7 @@
 					max="50"
 					step="5"
 					bind:value={tax_percent}
+					oninput={set_tax_percent}
 				/>
 			</div>
 			<div class="text-center">

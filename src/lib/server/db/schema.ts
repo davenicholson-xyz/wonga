@@ -30,3 +30,11 @@ export const income = sqliteTable('income', {
 	due_date: integer('due_date', { mode: 'timestamp' }).notNull(),
 	amount: integer('amount').notNull()
 });
+
+export const settings = sqliteTable('settings', {
+	id: text('id')
+		.primaryKey()
+		.$defaultFn(() => crypto.randomUUID()),
+	key: text('key').notNull().unique(),
+	value: text('value').notNull()
+});
