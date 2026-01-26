@@ -38,3 +38,20 @@ export const settings = sqliteTable('settings', {
 	key: text('key').notNull().unique(),
 	value: text('value').notNull()
 });
+
+export const category = sqliteTable('category', {
+	id: text('id')
+		.primaryKey()
+		.$defaultFn(() => crypto.randomUUID()),
+	name: text('name').notNull()
+});
+
+export const expense = sqliteTable('expense', {
+	id: text('id')
+		.primaryKey()
+		.$defaultFn(() => crypto.randomUUID()),
+	category_id: text('category_id').references(() => category.id),
+	description: text('description').notNull(),
+	amount: integer('amount').notNull(),
+	billspot: integer({ mode: 'boolean' }).default(false)
+});

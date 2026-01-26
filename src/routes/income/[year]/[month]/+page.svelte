@@ -16,12 +16,24 @@
 
 	const current_month_year = $derived({ month: parseInt(month), year: parseInt(year) });
 
-	const saved_tax_percent = await get_settings({ key: 'tax_percent' });
-	let tax_percent = $state<number>(parseInt(saved_tax_percent?.value) || 25);
+	let tax_percent = $state<number>(20);
+	let initial_load = true;
 
-	async function set_tax_percent() {
-		await set_settings({ key: 'tax_percent', value: tax_percent.toString() });
-	}
+	$effect(() => {
+		const key = `tax_percent_${year}_${month}`;
+		get_settings({ key }).then((saved) => {
+			tax_percent = parseInt(saved?.value) || 20;
+			initial_load = true;
+		});
+	});
+
+	$effect(() => {
+		if (initial_load) {
+			initial_load = false;
+			return;
+		}
+		set_settings({ key: `tax_percent_${year}_${month}`, value: tax_percent.toString() });
+	});
 
 	const formatCurrency = (amount: number) =>
 		new Intl.NumberFormat('en-GB', {
@@ -112,7 +124,6 @@
 					max="50"
 					step="5"
 					bind:value={tax_percent}
-					oninput={set_tax_percent}
 				/>
 			</div>
 			<div class="text-center">
