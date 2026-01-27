@@ -3,6 +3,7 @@ import { db } from '$lib/server/db';
 import { invoice } from '$lib/server/db/schema';
 import { lte, gte, and } from 'drizzle-orm';
 import * as v from 'valibot';
+import { get_settings } from './settings.remote';
 
 export const get_invoice = query(async () => {
 	return await db.query.income.findMany();
@@ -32,8 +33,15 @@ export const get_income_for = query(
 			.from(invoice)
 			.where(and(gte(invoice.due_date, startOfMonth), lte(invoice.due_date, endOfMonth)));
 
-		const total = invoices.reduce((acc, invoice) => acc + invoice.total, 0);
+		const gross = invoices.reduce((acc, invoice) => acc + invoice.total, 0);
 
-		return { invoices, total };
+		const key = `tax_percent_${year}_${month}`;
+		let tax_percent = 20;
+		await get_settings({ key }).then((saved) => {
+			tax_percent = parseInt(saved?.value) || 20;
+		});
+		const net = gross - (gross * tax_percent) / 100;
+
+		return { invoices, total: gross, net };
 	}
 );

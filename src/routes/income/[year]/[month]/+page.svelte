@@ -86,8 +86,6 @@
 </div>
 
 {#snippet incomecard(invoice)}
-	<!-- {@const dueIn = new Date(invoice.due_date).getTime() - Date.now()}
-	{@const dueInDays = Math.ceil(dueIn / (1000 * 60 * 60 * 24))} -->
 	<div class="card bg-base-100 shadow-sm mb-3 mx-8">
 		<div class="card-body p-4">
 			<div class="flex items-center justify-between">
