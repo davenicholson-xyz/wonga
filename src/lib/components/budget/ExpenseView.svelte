@@ -1,13 +1,15 @@
 <script lang="ts">
 	import { formatCurrency } from '$lib/helpers';
+	import { getBudgetModalControls } from '$lib/context/modals.svelte';
 
+	const modals = getBudgetModalControls();
 	const { expense = $bindable() } = $props();
 </script>
 
 <tr
 	class="cursor-pointer hover"
 	onclick={() => {
-		// showEditItemModalHandler(expense.id, expense.description, expense.amount, expense.billspot);
+		modals.editExpense.show(expense.id, expense.description, expense.amount, expense.billspot);
 	}}
 >
 	<td>{expense.description}</td>

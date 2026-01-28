@@ -1,11 +1,13 @@
 <script lang="ts">
 	import BudgetStats from '$lib/components/budget/BudgetStats.svelte';
-	import { get_categories_with_expenses } from '$lib/funcs/budget.remote';
-	import { get_income_for } from '$lib/funcs/income.remote';
 	import CagtegoryView from '$lib/components/budget/CagtegoryView.svelte';
 	import NewCategoryModal from '$lib/components/budget/NewCategoryModal.svelte';
 	import NewExpenseModal from '$lib/components/budget/NewExpenseModal.svelte';
 	import EditCategoryModal from '$lib/components/budget/EditCategoryModal.svelte';
+	import EditExpenseModal from '$lib/components/budget/EditExpenseModal.svelte';
+
+	import { get_categories_with_expenses } from '$lib/funcs/budget.remote';
+	import { get_income_for } from '$lib/funcs/income.remote';
 
 	import { setBudgetModalControls } from '$lib/context/modals.svelte';
 
@@ -13,7 +15,9 @@
 	const this_year = new Date().getFullYear();
 
 	const income_data = get_income_for({ month: this_month, year: this_year });
-	const net = $derived(income_data.current?.net ?? 0);
+
+	const net = 4000;
+	//const net = $derived(income_data.current?.net ?? 0);
 
 	const categories_data = get_categories_with_expenses();
 	const categories = $derived(categories_data.current?.categories ?? []);
@@ -23,6 +27,7 @@
 	let newCategoryModal: ReturnType<typeof NewCategoryModal>;
 	let editCategoryModal: ReturnType<typeof EditCategoryModal>;
 	let newExpenseModal: ReturnType<typeof NewExpenseModal>;
+	let editExpenseModal: ReturnType<typeof EditExpenseModal>;
 
 	setBudgetModalControls({
 		newCategory: { show: () => newCategoryModal.show() },
@@ -30,7 +35,11 @@
 			show: (id: string, name: string, expenses: boolean) =>
 				editCategoryModal.show(id, name, expenses)
 		},
-		newExpense: { show: (category_id: string) => newExpenseModal.show(category_id) }
+		newExpense: { show: (category_id: string) => newExpenseModal.show(category_id) },
+		editExpense: {
+			show: (id: string, description: string, amount: number, bills_pot: boolean) =>
+				editExpenseModal.show(id, description, amount, bills_pot)
+		}
 	});
 
 	const bills_pot = $derived(
@@ -61,3 +70,4 @@
 <NewCategoryModal bind:this={newCategoryModal} />
 <EditCategoryModal bind:this={editCategoryModal} />
 <NewExpenseModal bind:this={newExpenseModal} />
+<EditExpenseModal bind:this={editExpenseModal} />
