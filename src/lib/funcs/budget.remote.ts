@@ -1,8 +1,7 @@
 import { command, form, query } from '$app/server';
 import { db } from '$lib/server/db';
 import { category, expense } from '$lib/server/db/schema';
-import { desc, eq } from 'drizzle-orm';
-import { get } from 'svelte/store';
+import { eq } from 'drizzle-orm';
 import * as v from 'valibot';
 
 export const get_categories_with_expenses = query(async () => {

@@ -1,26 +1,31 @@
 <script lang="ts">
 	import BudgetStats from '$lib/components/budget/BudgetStats.svelte';
-	import { formatCurrency } from '$lib/helpers';
-	import {
-		create_category,
-		create_expense,
-		delete_category,
-		delete_expense,
-		get_categories_with_expenses,
-		update_category,
-		update_expense
-	} from '$lib/funcs/budget.remote';
+	import { get_categories_with_expenses } from '$lib/funcs/budget.remote';
 	import { get_income_for } from '$lib/funcs/income.remote';
+	import CagtegoryView from '$lib/components/budget/CagtegoryView.svelte';
+	import NewCategoryModal from '$lib/components/budget/NewCategoryModal.svelte';
+	import EditCategoryModal from '$lib/components/budget/EditCategoryModal.svelte';
+
+	import { setModalControls } from '$lib/context/modals.svelte';
 
 	const this_month = new Date().getMonth() + 1;
 	const this_year = new Date().getFullYear();
 
-	const { net } = await get_income_for({ month: this_month, year: this_year });
+	const income_data = get_income_for({ month: this_month, year: this_year });
+	const net = $derived(income_data.current?.net ?? 0);
 
 	const categories_data = get_categories_with_expenses();
 	const categories = $derived(categories_data.current?.categories ?? []);
 	const total = $derived(categories_data.current?.total ?? 0);
 	const outgoing = $derived(total);
+
+	let newCategoryModal: ReturnType<typeof NewCategoryModal>;
+	let editCategoryModal: ReturnType<typeof EditCategoryModal>;
+
+	setModalControls({
+		newCategory: { show: () => newCategoryModal.showModal() },
+		editCategory: { show: (id: string, name: string) => editCategoryModal.show(id, name) }
+	});
 
 	const bills_pot = $derived(
 		categories.reduce((acc, category) => {
@@ -33,312 +38,74 @@
 		}, 0)
 	);
 
-	let showCategoryModal = $state(false);
-	function showEditCategoryModalHandler(id: string, name: string) {
-		editCategoryID = id;
-		editCategoryName = name;
-		showEditCategoryModal = true;
-	}
+	// let newCategoryModal: ReturnType<typeof NewCategoryModal>;
+	// let editCategoryModal: ReturnType<typeof EditCategoryModal>;
 
-	let showEditCategoryModal = $state(false);
-	let editCategoryID = $state('');
-	let editCategoryName = $state('');
+	// function showEditCategoryModalHandler(id: string, name: string) {
+	// 	editCategoryID = id;
+	// 	editCategoryName = name;
+	// 	showEditCategoryModal = true;
+	// }
 
-	let showNewItemModal = $state(false);
-	let newItemCategoryId = $state('');
-	function showNewItemModalHandler(category_id: string) {
-		newItemCategoryId = category_id;
-		showNewItemModal = true;
-	}
+	// let showEditCategoryModal = $state(true);
+	// let editCategoryID = $state('');
+	// let editCategoryName = $state('');
 
-	const editCategoryHasExpenses = $derived(
-		categories.find((c) => c.id === editCategoryID)?.expenses.length ?? 0 > 0
-	);
+	// let showNewItemModal = $state(false);
+	// let newItemCategoryId = $state('');
+	// function showNewItemModalHandler(category_id: string) {
+	// 	newItemCategoryId = category_id;
+	// 	showNewItemModal = true;
+	// }
 
-	async function delete_category_handler(id: string) {
-		const category = categories.find((c) => c.id === id);
-		if (category && category.expenses.length > 0) {
-			alert('Cannot delete a category that has expenses. Remove the expenses first.');
-			return;
-		}
-		if (confirm('Are you sure you want to delete this category?')) {
-			await delete_category({ id });
-			showEditCategoryModal = false;
-		}
-	}
+	// const editCategoryHasExpenses = $derived(
+	// 	categories.find((c) => c.id === editCategoryID)?.expenses.length ?? 0 > 0
+	// );
 
-	let showEditItemModal = $state(false);
-	let editItemID = $state('');
-	let editItemDescription = $state('');
-	let editItemAmount = $state(0);
-	let editItemBillsPot = $state<boolean | null>(null);
-	function showEditItemModalHandler(
-		id: string,
-		description: string,
-		amount: number,
-		billspot: boolean | null
-	) {
-		editItemID = id;
-		editItemDescription = description;
-		editItemAmount = amount;
-		editItemBillsPot = billspot;
-		showEditItemModal = true;
-	}
+	// async function delete_category_handler(id: string) {
+	// 	const category = categories.find((c) => c.id === id);
+	// 	if (category && category.expenses.length > 0) {
+	// 		alert('Cannot delete a category that has expenses. Remove the expenses first.');
+	// 		return;
+	// 	}
+	// 	if (confirm('Are you sure you want to delete this category?')) {
+	// 		await delete_category({ id });
+	// 		showEditCategoryModal = false;
+	// 	}
+	// }
+
+	// let showEditItemModal = $state(false);
+	// let editItemID = $state('');
+	// let editItemDescription = $state('');
+	// let editItemAmount = $state(0);
+	// let editItemBillsPot = $state<boolean | null>(null);
+	// function showEditItemModalHandler(
+	// 	id: string,
+	// 	description: string,
+	// 	amount: number,
+	// 	billspot: boolean | null
+	// ) {
+	// 	editItemID = id;
+	// 	editItemDescription = description;
+	// 	editItemAmount = amount;
+	// 	editItemBillsPot = billspot;
+	// 	showEditItemModal = true;
+	// }
 </script>
 
 <div class="mx-4 mt-2">
 	<BudgetStats {net} {outgoing} {bills_pot} />
 
 	{#each categories as category (category.id)}
-		<div class="card bg-base-100 shadow-sm mt-2">
-			<div class="card-body p-3">
-				<div class="flex justify-between items-center">
-					<button
-						class="font-bold text-sm hover:underline text-left"
-						onclick={() => {
-							showEditCategoryModalHandler(category.id, category.name);
-						}}
-					>
-						{category.name}
-					</button>
-					<span class="text-sm font-bold">{formatCurrency(category.total)}</span>
-				</div>
-				<table class="table table-xs">
-					<tbody>
-						{#each category.expenses as expense (expense.id)}
-							<tr
-								class="cursor-pointer hover"
-								onclick={() => {
-									showEditItemModalHandler(
-										expense.id,
-										expense.description,
-										expense.amount,
-										expense.billspot
-									);
-								}}
-							>
-								<td>{expense.description}</td>
-								<td class="text-right">{formatCurrency(expense.amount)}</td>
-								<td class="w-8 text-center text-yellow-400 opacity-60">
-									{#if expense.billspot}
-										<svg
-											xmlns="http://www.w3.org/2000/svg"
-											width="12"
-											height="12"
-											viewBox="0 0 24 24"
-										>
-											<g
-												fill="none"
-												stroke="currentColor"
-												stroke-linecap="round"
-												stroke-linejoin="round"
-												stroke-width="2"
-											>
-												<path
-													d="M9.5 3h5A1.5 1.5 0 0 1 16 4.5A3.5 3.5 0 0 1 12.5 8h-1A3.5 3.5 0 0 1 8 4.5A1.5 1.5 0 0 1 9.5 3"
-												/>
-												<path
-													d="M12.5 21H8a4 4 0 0 1-4-4v-1a8 8 0 0 1 14.946-3.971M16 19h6m-3-3l3 3l-3 3"
-												/>
-											</g>
-										</svg>
-									{/if}
-								</td>
-							</tr>
-						{/each}
-
-						<tr>
-							<td colspan="3">
-								<button
-									class="btn btn-ghost btn-xs w-full opacity-50"
-									onclick={() => showNewItemModalHandler(category.id)}>+ Add Item</button
-								>
-							</td>
-						</tr>
-					</tbody>
-				</table>
-			</div>
-		</div>
+		<CagtegoryView {category} />
+		<!-- <CagtegoryView {category} edit={() => editCategoryModal.show(category.id, category.name)} /> -->
 	{/each}
+
 	<button
 		class="btn btn-ghost btn-sm w-full mt-2 opacity-50"
-		onclick={() => (showCategoryModal = true)}>+ Add Category</button
+		onclick={() => newCategoryModal.showModal()}>+ Add Category</button
 	>
 </div>
 
-<dialog class="modal" class:modal-open={showCategoryModal}>
-	<div class="modal-box">
-		<h3 class="font-bold text-lg">New Category</h3>
-		<form {...create_category} onsubmit={() => (showCategoryModal = false)}>
-			<div class="form-control mt-4">
-				<label class="label" for="categoryName">
-					<span class="label-text">Name</span>
-				</label>
-				<input
-					{...create_category.fields.name.as('text')}
-					id="categoryName"
-					class="input input-bordered input-sm"
-				/>
-			</div>
-			<div class="modal-action">
-				<button
-					class="btn btn-ghost btn-sm"
-					onclick={(e: Event) => {
-						e.preventDefault();
-						showCategoryModal = false;
-					}}>Cancel</button
-				>
-				<button class="btn btn-primary btn-sm" type="submit">Create</button>
-			</div>
-		</form>
-	</div>
-	<form method="dialog" class="modal-backdrop">
-		<button onclick={() => (showCategoryModal = false)}>close</button>
-	</form>
-</dialog>
-
-<dialog class="modal" class:modal-open={showEditCategoryModal}>
-	<div class="modal-box">
-		<h3 class="font-bold text-lg">Edit Category</h3>
-		<form {...update_category} onsubmit={() => (showEditCategoryModal = false)}>
-			<input {...update_category.fields.id.as('text')} type="hidden" bind:value={editCategoryID} />
-			<div class="form-control mt-4">
-				<label class="label" for="category-name">
-					<span class="label-text">Name</span>
-				</label>
-				<input
-					{...update_category.fields.name.as('text')}
-					bind:value={editCategoryName}
-					class="input input-bordered input-sm"
-					id="category-name"
-				/>
-			</div>
-			<div class="modal-action justify-between">
-				<button
-					class="btn btn-error btn-sm"
-					disabled={editCategoryHasExpenses}
-					title={editCategoryHasExpenses ? 'Remove all expenses first' : ''}
-					onclick={() => {
-						delete_category_handler(editCategoryID);
-					}}>Delete</button
-				>
-				<div class="flex gap-2">
-					<button
-						class="btn btn-ghost btn-sm"
-						onclick={(e: Event) => {
-							e.preventDefault();
-							showEditCategoryModal = false;
-						}}>Cancel</button
-					>
-					<button class="btn btn-primary btn-sm" type="submit">Save</button>
-				</div>
-			</div>
-		</form>
-	</div>
-	<form method="dialog" class="modal-backdrop">
-		<button onclick={() => (showEditCategoryModal = false)}>close</button>
-	</form>
-</dialog>
-
-<dialog class="modal" class:modal-open={showNewItemModal}>
-	<div class="modal-box">
-		<h3 class="font-bold text-lg">New Item</h3>
-		<form {...create_expense} onsubmit={() => (showNewItemModal = false)}>
-			<input
-				{...create_expense.fields.category_id.as('text')}
-				type="hidden"
-				bind:value={newItemCategoryId}
-			/>
-			<div class="form-control mt-4">
-				<label class="label" for="description">
-					<span class="label-text">Description</span>
-				</label>
-				<input
-					{...create_expense.fields.description.as('text')}
-					placeholder="e.g. Netflix"
-					class="input input-bordered input-sm"
-				/>
-			</div>
-			<div class="form-control mt-2">
-				<label class="label" for="amount">
-					<span class="label-text">Amount</span>
-				</label>
-				<input
-					{...create_expense.fields.amount.as('number')}
-					placeholder="0"
-					class="input input-bordered input-sm"
-				/>
-			</div>
-			<div class="form-control mt-4">
-				<label class="label cursor-pointer justify-start gap-3">
-					<input {...create_expense.fields.billspot.as('checkbox')} />
-					<span class="label-text">Bills Pot</span>
-				</label>
-			</div>
-			<div class="modal-action">
-				<button
-					class="btn btn-ghost btn-sm"
-					type="button"
-					onclick={() => (showNewItemModal = false)}>Cancel</button
-				>
-				<button class="btn btn-primary btn-sm" type="submit">Add</button>
-			</div>
-		</form>
-	</div>
-	<form method="dialog" class="modal-backdrop">
-		<button onclick={() => (showNewItemModal = false)}>close</button>
-	</form>
-</dialog>
-
-<dialog class="modal" class:modal-open={showEditItemModal}>
-	<div class="modal-box">
-		<h3 class="font-bold text-lg">Edit Item</h3>
-		<form {...update_expense} onsubmit={() => (showEditItemModal = false)}>
-			<input {...update_expense.fields.id.as('text')} type="hidden" bind:value={editItemID} />
-			<div class="form-control mt-4">
-				<label class="label" for="description">
-					<span class="label-text">Description</span>
-				</label>
-				<input
-					{...update_expense.fields.description.as('text')}
-					class="input input-bordered input-sm"
-					bind:value={editItemDescription}
-				/>
-			</div>
-			<div class="form-control mt-2">
-				<label class="label" for="amount">
-					<span class="label-text">Amount</span>
-				</label>
-				<input
-					{...update_expense.fields.amount.as('number')}
-					class="input input-bordered input-sm"
-					bind:value={editItemAmount}
-				/>
-			</div>
-			<div class="form-control mt-4">
-				<label class="label cursor-pointer justify-start gap-3">
-					<input {...update_expense.fields.billspot.as('checkbox')} checked={editItemBillsPot} />
-					<span class="label-text">Bills Pot</span>
-				</label>
-			</div>
-			<div class="modal-action justify-between">
-				<button
-					class="btn btn-error btn-sm"
-					onclick={async () => {
-						await delete_expense({ id: editItemID });
-						showEditItemModal = false;
-					}}>Delete</button
-				>
-				<div class="flex gap-2">
-					<button class="btn btn-ghost btn-sm" onclick={() => (showEditItemModal = false)}
-						>Cancel</button
-					>
-					<button class="btn btn-primary btn-sm" type="submit">Save</button>
-				</div>
-			</div>
-		</form>
-	</div>
-	<form method="dialog" class="modal-backdrop">
-		<button onclick={() => (showEditItemModal = false)}>close</button>
-	</form>
-</dialog>
+<NewCategoryModal bind:this={newCategoryModal} />
+<EditCategoryModal bind:this={editCategoryModal} />
