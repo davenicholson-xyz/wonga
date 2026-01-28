@@ -5,7 +5,6 @@
 
 	const modals = getModalControls();
 	const { category = $bindable() } = $props();
-	$inspect(category);
 </script>
 
 <div class="card bg-base-100 shadow-sm mt-2">

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { update_category } from '$lib/funcs/budget.remote';
+	import { delete_category, update_category } from '$lib/funcs/budget.remote';
 
 	let showModal = $state(false);
 
@@ -37,7 +37,9 @@
 						class="btn btn-error btn-sm"
 						disabled={expenses}
 						title={expenses ? 'Remove all expenses first' : ''}
-						onclick={() => {}}>Delete</button
+						onclick={() => {
+							delete_category({ id });
+						}}>Delete</button
 					>
 
 					<button

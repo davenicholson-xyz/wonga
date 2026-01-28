@@ -2,7 +2,7 @@ import { getContext, setContext } from 'svelte';
 
 type ModalControls = {
 	newCategory: { show: () => void };
-	editCategory: { show: (id: string, name: string, expesnes: boolean) => void };
+	editCategory: { show: (id: string, name: string, expenses: boolean) => void };
 };
 
 const key = Symbol('budget-modals');

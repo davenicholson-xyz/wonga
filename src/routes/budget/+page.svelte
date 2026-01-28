@@ -24,7 +24,10 @@
 
 	setModalControls({
 		newCategory: { show: () => newCategoryModal.showModal() },
-		editCategory: { show: (id: string, name: string) => editCategoryModal.show(id, name) }
+		editCategory: {
+			show: (id: string, name: string, expenses: boolean) =>
+				editCategoryModal.show(id, name, expenses)
+		}
 	});
 
 	const bills_pot = $derived(
