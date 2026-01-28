@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { getModalControls } from '$lib/context/modals.svelte';
+	import { getBudgetModalControls } from '$lib/context/modals.svelte';
 	import ExpenseView from '$lib/components/budget/ExpenseView.svelte';
 	import { formatCurrency } from '$lib/helpers';
 
-	const modals = getModalControls();
+	const modals = getBudgetModalControls();
 	const { category = $bindable() } = $props();
 </script>
 
@@ -24,6 +24,17 @@
 				{#each category.expenses as expense (expense.id)}
 					<ExpenseView {expense} />
 				{/each}
+
+				<tr>
+					<td colspan="3">
+						<button
+							class="btn btn-ghost btn-xs w-full opacity-50"
+							onclick={() => {
+								modals.newExpense.show(category.id);
+							}}>+ Add Item</button
+						>
+					</td>
+				</tr>
 			</tbody>
 		</table>
 	</div>

@@ -1,17 +1,17 @@
 <script lang="ts">
 	import { create_category } from '$lib/funcs/budget.remote';
 
-	let show = $state(false);
+	let showModal = $state(false);
 
-	export function showModal() {
-		show = true;
+	export function show() {
+		showModal = true;
 	}
 </script>
 
-<dialog class="modal" class:modal-open={show}>
+<dialog class="modal" class:modal-open={showModal}>
 	<div class="modal-box">
 		<h3 class="font-bold text-lg">New Category</h3>
-		<form {...create_category} onsubmit={() => (show = false)}>
+		<form {...create_category} onsubmit={() => (showModal = false)}>
 			<div class="form-control mt-4">
 				<label class="label" for="categoryName">
 					<span class="label-text">Name</span>
@@ -27,7 +27,7 @@
 					class="btn btn-ghost btn-sm"
 					onclick={(e: Event) => {
 						e.preventDefault();
-						show = false;
+						showModal = false;
 					}}>Cancel</button
 				>
 				<button class="btn btn-primary btn-sm" type="submit">Create</button>
@@ -35,6 +35,6 @@
 		</form>
 	</div>
 	<form method="dialog" class="modal-backdrop">
-		<button onclick={() => (show = false)}>close</button>
+		<button onclick={() => (showModal = false)}>close</button>
 	</form>
 </dialog>
