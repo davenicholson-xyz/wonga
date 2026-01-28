@@ -34,6 +34,7 @@
 			<div class="modal-action justify-between">
 				<div class="flex gap-2">
 					<button
+						type="button"
 						class="btn btn-error btn-sm"
 						disabled={expenses}
 						title={expenses ? 'Remove all expenses first' : ''}
@@ -43,6 +44,7 @@
 					>
 
 					<button
+						type="button"
 						class="btn btn-ghost btn-sm"
 						onclick={(e: Event) => {
 							e.preventDefault();

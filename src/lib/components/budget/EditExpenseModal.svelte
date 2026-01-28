@@ -6,18 +6,18 @@
 	let id = $state('');
 	let description = $state('');
 	let amount = $state(0);
-	let bills_pot = $state(false);
+	let billspot = $state(false);
 
 	export function show(
 		expense_id: string,
 		expense_description: string,
 		expense_amount: number,
-		expense_bills_pot: boolean
+		expense_billspot: boolean
 	) {
 		id = expense_id;
 		description = expense_description;
 		amount = expense_amount;
-		bills_pot = expense_bills_pot;
+		billspot = expense_billspot;
 		showModal = true;
 	}
 </script>
@@ -49,12 +49,17 @@
 			</div>
 			<div class="form-control mt-4">
 				<label class="label cursor-pointer justify-start gap-3">
-					<input {...update_expense.fields.billspot.as('checkbox')} checked={bills_pot} />
+					<input
+						{...update_expense.fields.billspot.as('checkbox')}
+						checked={billspot}
+						class="toggle"
+					/>
 					<span class="label-text">Bills Pot</span>
 				</label>
 			</div>
 			<div class="modal-action justify-between">
 				<button
+					type="button"
 					class="btn btn-error btn-sm"
 					onclick={async () => {
 						await delete_expense({ id });
@@ -62,7 +67,9 @@
 					}}>Delete</button
 				>
 				<div class="flex gap-2">
-					<button class="btn btn-ghost btn-sm" onclick={() => (showModal = false)}>Cancel</button>
+					<button type="button" class="btn btn-ghost btn-sm" onclick={() => (showModal = false)}
+						>Cancel</button
+					>
 					<button class="btn btn-primary btn-sm" type="submit">Save</button>
 				</div>
 			</div>

@@ -24,6 +24,7 @@
 			</div>
 			<div class="modal-action">
 				<button
+					type="button"
 					class="btn btn-ghost btn-sm"
 					onclick={(e: Event) => {
 						e.preventDefault();

@@ -42,7 +42,7 @@
 			</div>
 			<div class="form-control mt-4">
 				<label class="label cursor-pointer justify-start gap-3">
-					<input {...create_expense.fields.billspot.as('checkbox')} />
+					<input {...create_expense.fields.billspot.as('checkbox')} class="toggle" />
 					<span class="label-text">Bills Pot</span>
 				</label>
 			</div>
