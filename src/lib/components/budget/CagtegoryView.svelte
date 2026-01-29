@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getBudgetModalControls } from '$lib/context/modals.svelte';
+	import { getBudgetModalControls } from '$lib/context/budget.svelte';
 	import ExpenseView from '$lib/components/budget/ExpenseView.svelte';
 	import { formatCurrency } from '$lib/helpers';
 

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { formatCurrency } from '$lib/helpers';
-	import { getBudgetModalControls } from '$lib/context/modals.svelte';
+	import { getBudgetModalControls } from '$lib/context/budget.svelte';
 
 	const modals = getBudgetModalControls();
 	const { expense = $bindable() } = $props();

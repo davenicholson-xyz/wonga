@@ -9,7 +9,7 @@
 	import { get_categories_with_expenses } from '$lib/funcs/budget.remote';
 	import { get_income_for } from '$lib/funcs/income.remote';
 
-	import { setBudgetModalControls } from '$lib/context/modals.svelte';
+	import { setBudgetModalControls } from '$lib/context/budget.svelte';
 
 	const this_month = new Date().getMonth() + 1;
 	const this_year = new Date().getFullYear();
