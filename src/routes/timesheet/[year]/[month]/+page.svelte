@@ -1,0 +1,75 @@
+<script lang="ts">
+	import { page } from '$app/state';
+	import { setTimeSheetModalControls } from '$lib/context/timesheet.svelte';
+
+	import CalendarView from '$lib/components/timesheet/CalendarView.svelte';
+	import NewTimesheetEntryModal from '$lib/components/timesheet/NewTimesheetEntryModal.svelte';
+	import { resolve } from '$app/paths';
+
+	const year = $derived(page.params.year) as string;
+	const month = $derived(page.params.month) as string;
+
+	const month_name = $derived(
+		new Date(parseInt(year), parseInt(month) - 1).toLocaleString('en-GB', {
+			month: 'long'
+		})
+	);
+
+	const current_month_year = $derived({ month: parseInt(month), year: parseInt(year) });
+
+	const next_month = $derived(current_month_year.month === 12 ? 1 : current_month_year.month + 1);
+	const next_year = $derived(
+		current_month_year.month === 12 ? current_month_year.year + 1 : current_month_year.year
+	);
+
+	const previous_month = $derived(
+		current_month_year.month === 1 ? 12 : current_month_year.month - 1
+	);
+	const previous_year = $derived(
+		current_month_year.month === 1 ? current_month_year.year - 1 : current_month_year.year
+	);
+
+	let newTimesheetEntryModal: ReturnType<typeof NewTimesheetEntryModal>;
+
+	setTimeSheetModalControls({
+		newCategory: {
+			show: () => {
+				newTimesheetEntryModal.show();
+			}
+		}
+	});
+</script>
+
+<div class="flex justify-between align-center mb-8 mx-6">
+	<a href={resolve(`/timesheet/${previous_year}/${previous_month}`)} aria-label="Previous Month">
+		<svg
+			xmlns="http://www.w3.org/2000/svg"
+			fill="none"
+			viewBox="0 0 24 24"
+			stroke-width="1.5"
+			stroke="currentColor"
+			class="w-6 h-6"
+		>
+			<path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+		</svg>
+	</a>
+
+	<h3 class="text-2xl font-bold">{month_name} {year}</h3>
+
+	<a href={resolve(`/timesheet/${next_year}/${next_month}`)} aria-label="Next Month">
+		<svg
+			xmlns="http://www.w3.org/2000/svg"
+			fill="none"
+			viewBox="0 0 24 24"
+			stroke-width="1.5"
+			stroke="currentColor"
+			class="w-6 h-6"
+		>
+			<path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+		</svg>
+	</a>
+</div>
+
+<CalendarView {year} {month} />
+
+<NewTimesheetEntryModal bind:this={newTimesheetEntryModal} />
