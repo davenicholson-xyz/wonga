@@ -39,7 +39,14 @@
 <dialog class="modal" class:modal-open={showModal}>
 	<div class="modal-box">
 		<div>
-			<h3>{new Date(date)}</h3>
+			<h3>
+				{new Date(date).toLocaleDateString('en-GB', {
+					weekday: 'short',
+					day: 'numeric',
+					month: 'short',
+					year: 'numeric'
+				})}
+			</h3>
 		</div>
 		<form {...edit_timesheet} onsubmit={() => (showModal = false)}>
 			<input {...edit_timesheet.fields.date.as('text')} type="hidden" value={date} />

@@ -3,11 +3,12 @@
 
 	import { page } from '$app/state';
 	import { get_timesheet_for_month } from '$lib/funcs/timesheet.remote';
+	import { SvelteDate } from 'svelte/reactivity';
 
 	const year = $derived(parseInt(page.params.year as string));
 	const month = $derived(parseInt(page.params.month as string));
 
-	const tmonth = get_timesheet_for_month(`${year}-${month}-1`);
+	const tmonth = $derived(get_timesheet_for_month(`${year}-${month}-1`));
 	const entries = $derived(tmonth.current ?? []);
 	type Entry = (typeof entries)[number];
 	const entryByDate = $derived(new Map(entries.map((e) => [e.date, e])));
@@ -57,7 +58,7 @@
 	});
 
 	function getISOWeekNumber(date: Date): number {
-		const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+		const d = new SvelteDate(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
 		d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
 		const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
 		return Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
@@ -100,7 +101,7 @@
 			>
 				{cell.day}
 				<span
-					class="min-w-1.5 max-w-1.5 h-1.5 rounded-full mt-0.5"
+					class="w-1.5 h-1.5 shrink-0 rounded-full mt-0.5"
 					class:bg-warning={cell.entry?.start_time === '06:00'}
 					class:bg-info={cell.entry && cell.entry.start_time !== '06:00'}
 					class:invisible={!cell.entry}

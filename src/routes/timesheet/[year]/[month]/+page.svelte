@@ -77,7 +77,7 @@
 	</a>
 </div>
 
-<CalendarView {year} {month} />
+<CalendarView />
 
 <TimesheetEntryModal bind:this={timesheetEntryModal} />
 <WeekViewModal bind:this={weekViewModal} />

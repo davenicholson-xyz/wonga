@@ -32,14 +32,6 @@
 			<h4 class="font-semibold text-sm text-base-content/60 mb-2">Weekdays</h4>
 			<div class="overflow-x-auto mb-4">
 				<table class="table table-xs text-xs">
-					<!-- <thead>
-						<tr>
-							<th>Date</th>
-							<th>Location</th>
-							<th>Start</th>
-							<th>End</th>
-						</tr>
-					</thead> -->
 					<tbody>
 						{#each weekdays as day (day.date)}
 							<tr>
@@ -58,14 +50,6 @@
 			<h4 class="font-semibold text-sm text-base-content/60 mb-2">Weekend</h4>
 			<div class="overflow-x-auto">
 				<table class="table table-xs text-xs">
-					<!-- <thead>
-						<tr>
-							<th>Date</th>
-							<th>Location</th>
-							<th>Start</th>
-							<th>End</th>
-						</tr>
-					</thead> -->
 					<tbody>
 						{#each weekends as day (day.date)}
 							<tr>
