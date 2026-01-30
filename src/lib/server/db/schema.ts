@@ -55,3 +55,13 @@ export const expense = sqliteTable('expense', {
 	amount: integer('amount').notNull(),
 	billspot: integer({ mode: 'boolean' }).default(false)
 });
+
+export const timesheet = sqliteTable('timesheet', {
+	id: text('id')
+		.primaryKey()
+		.$defaultFn(() => crypto.randomUUID()),
+	location: text('location').notNull(),
+	date: text('date').notNull().unique(),
+	start_time: text('start_time').notNull(),
+	end_time: text('end_time').notNull()
+});

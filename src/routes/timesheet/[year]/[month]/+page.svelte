@@ -3,7 +3,7 @@
 	import { setTimeSheetModalControls } from '$lib/context/timesheet.svelte';
 
 	import CalendarView from '$lib/components/timesheet/CalendarView.svelte';
-	import NewTimesheetEntryModal from '$lib/components/timesheet/NewTimesheetEntryModal.svelte';
+	import TimesheetEntryModal from '$lib/components/timesheet/TimesheetEntryModal.svelte';
 	import { resolve } from '$app/paths';
 
 	const year = $derived(page.params.year) as string;
@@ -29,12 +29,12 @@
 		current_month_year.month === 1 ? current_month_year.year - 1 : current_month_year.year
 	);
 
-	let newTimesheetEntryModal: ReturnType<typeof NewTimesheetEntryModal>;
+	let timesheetEntryModal: ReturnType<typeof TimesheetEntryModal>;
 
 	setTimeSheetModalControls({
-		newCategory: {
-			show: () => {
-				newTimesheetEntryModal.show();
+		newEntry: {
+			show: (date, entry) => {
+				timesheetEntryModal.show(date, entry);
 			}
 		}
 	});
@@ -72,4 +72,4 @@
 
 <CalendarView {year} {month} />
 
-<NewTimesheetEntryModal bind:this={newTimesheetEntryModal} />
+<TimesheetEntryModal bind:this={timesheetEntryModal} />

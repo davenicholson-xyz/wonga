@@ -1,7 +1,9 @@
 import { getContext, setContext } from 'svelte';
 
+type Entry = { id: string; date: string; location: string; start_time: string; end_time: string };
+
 type TimeSheetModalControls = {
-	newCategory: { show: () => void };
+	newEntry: { show: (date: string, entry?: Entry) => void };
 };
 
 const key = Symbol('timesheet-modals');

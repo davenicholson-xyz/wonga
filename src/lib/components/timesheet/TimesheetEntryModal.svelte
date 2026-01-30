@@ -1,11 +1,28 @@
 <script lang="ts">
+	import { edit_timesheet, delete_timesheet } from '$lib/funcs/timesheet.remote';
+
+	type Entry = { id: string; date: string; location: string; start_time: string; end_time: string };
+
 	let showModal = $state(false);
 
+	let date = $state('');
+	let location = $state('');
 	let startTime = $state('06:00');
 	let endTime = $state('16:00');
+	let hasEntry = $state(false);
 
-	export function show() {
+	export function show(d: string, entry?: Entry) {
+		date = d;
+		location = entry?.location ?? '';
+		startTime = entry?.start_time ?? '06:00';
+		endTime = entry?.end_time ?? '16:00';
+		hasEntry = !!entry;
 		showModal = true;
+	}
+
+	async function handleDelete() {
+		await delete_timesheet({ date });
+		showModal = false;
 	}
 
 	function setDayShift() {
@@ -22,15 +39,21 @@
 <dialog class="modal" class:modal-open={showModal}>
 	<div class="modal-box">
 		<div>
-			<h3>Selected date here</h3>
+			<h3>{new Date(date)}</h3>
 		</div>
-		<form onsubmit={() => (showModal = false)}>
+		<form {...edit_timesheet} onsubmit={() => (showModal = false)}>
+			<input {...edit_timesheet.fields.date.as('text')} type="hidden" value={date} />
+
 			<div class="form-control mt-4">
 				<label class="label text-sm" for="location">
 					<span class="label-text">Location</span>
 				</label>
-				<!-- auto complete with UPol -->
-				<input id="location" class="input input-bordered input-sm" value="UPol" />
+				<input
+					id="location"
+					class="input input-bordered input-sm"
+					{...edit_timesheet.fields.location.as('text')}
+					bind:value={location}
+				/>
 			</div>
 			<div class="flex gap-2 mt-3">
 				<button type="button" class="btn btn-outline btn-warning btn-sm grow" onclick={setDayShift}
@@ -47,8 +70,8 @@
 					</label>
 					<input
 						id="startTime"
-						type="time"
 						class="input input-bordered input-sm"
+						{...edit_timesheet.fields.start_time.as('time')}
 						bind:value={startTime}
 					/>
 				</div>
@@ -58,8 +81,8 @@
 					</label>
 					<input
 						id="endTime"
-						type="time"
 						class="input input-bordered input-sm"
+						{...edit_timesheet.fields.end_time.as('time')}
 						bind:value={endTime}
 					/>
 				</div>
@@ -68,14 +91,19 @@
 				<span class="text-sm text-base-content/60">Repeat for</span>
 				<input
 					id="repeatDays"
-					type="number"
+					{...edit_timesheet.fields.repeat.as('number')}
 					class="input input-bordered input-sm w-14 text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-					value="1"
-					min="1"
+					value="0"
+					min="0"
 				/>
 				<span class="text-sm text-base-content/60">days</span>
 			</div>
 			<div class="modal-action">
+				{#if hasEntry}
+					<button type="button" class="btn btn-error btn-sm mr-auto" onclick={handleDelete}
+						>Delete</button
+					>
+				{/if}
 				<button
 					type="button"
 					class="btn btn-ghost btn-sm"
@@ -84,7 +112,7 @@
 						showModal = false;
 					}}>Cancel</button
 				>
-				<button class="btn btn-primary btn-sm" type="submit">Create</button>
+				<button class="btn btn-primary btn-sm" type="submit">Update</button>
 			</div>
 		</form>
 	</div>
