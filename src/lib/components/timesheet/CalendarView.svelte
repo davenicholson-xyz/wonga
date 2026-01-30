@@ -2,8 +2,8 @@
 	import { getTimeSheetModalControls } from '$lib/context/timesheet.svelte';
 	import { page } from '$app/state';
 
-	const year = $derived(parseInt(page.params.year));
-	const month = $derived(parseInt(page.params.month));
+	const year = $derived(parseInt(page.params.year as string));
+	const month = $derived(parseInt(page.params.month as string));
 
 	const days_in_month = $derived(new Date(year, month, 0).getDate());
 
