@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import type { Entry } from '$lib/context/timesheet.svelte';
 
 	type Day = { date: string; dayOfWeek: number; entry?: Entry };
@@ -15,6 +16,36 @@
 	function formatDate(date: string) {
 		const [y, m, d] = date.split('-');
 		return `${d.padStart(2, '0')}/${m.padStart(2, '0')}/${y}`;
+	}
+
+	function totalHours(entries: Day[]) {
+		return entries.reduce((sum, d) => {
+			if (!d.entry) return sum;
+			const [sh, sm] = d.entry.start_time.split(':').map(Number);
+			const [eh, em] = d.entry.end_time.split(':').map(Number);
+			return sum + (eh + em / 60) - (sh + sm / 60);
+		}, 0);
+	}
+
+	function generateInvoice() {
+		const items: { name: string; description: string; quantity: number }[] = [];
+
+		if (weekdays.length > 0) {
+			const hours = totalHours(weekdays);
+			const location = weekdays[0].entry?.location ?? '';
+			items.push({ name: location, description: 'Weekdays', quantity: hours });
+		}
+
+		if (weekends.length > 0) {
+			const hours = totalHours(weekends);
+			const location = weekends[0].entry?.location ?? '';
+			items.push({ name: location, description: 'Weekend', quantity: hours });
+		}
+
+		const url = new URL(resolve('/invoices/new'), window.location.origin);
+		url.searchParams.set('items', JSON.stringify(items));
+		showModal = false;
+		window.location.href = url.toString();
 	}
 
 	export function show(weekDays: Day[], week: number) {
@@ -64,7 +95,7 @@
 			</div>
 		{/if}
 
-		<button type="button" class="btn btn-primary btn-sm w-full mt-8">
+		<button type="button" class="btn btn-primary btn-sm w-full mt-8" onclick={generateInvoice}>
 			<svg
 				xmlns="http://www.w3.org/2000/svg"
 				fill="none"

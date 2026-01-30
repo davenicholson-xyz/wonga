@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import { create_invoice } from '$lib/funcs/invoices.remote';
 	import CustomerSelect from '$lib/components/invoice/CustomerSelect.svelte';
 	import DateSelect from '$lib/components/invoice/DateSelect.svelte';
@@ -11,6 +12,16 @@
 	let dueDate = $state<string>('');
 	let items = $state<string>('');
 	let itemsTotal = $state(0);
+
+	const initialItems = $derived.by(() => {
+		const raw = page.url.searchParams.get('items');
+		if (!raw) return undefined;
+		try {
+			return JSON.parse(raw) as { name: string; description: string; quantity: number }[];
+		} catch {
+			return undefined;
+		}
+	});
 </script>
 
 <div class="mx-2 mt-2">
@@ -31,7 +42,7 @@
 			</div>
 
 			<div class="form-control mt-3">
-				<InvoiceItems bind:value={items} bind:total={itemsTotal} />
+				<InvoiceItems bind:value={items} bind:total={itemsTotal} {initialItems} />
 			</div>
 		</div>
 	</div>

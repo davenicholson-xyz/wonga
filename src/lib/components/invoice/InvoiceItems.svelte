@@ -1,6 +1,14 @@
 <script lang="ts">
 	import { formatCurrency } from '$lib/helpers';
-	let { value = $bindable(''), total = $bindable(0) } = $props();
+	let {
+		value = $bindable(''),
+		total = $bindable(0),
+		initialItems
+	}: {
+		value?: string;
+		total?: number;
+		initialItems?: { name: string; description: string; quantity: number }[];
+	} = $props();
 
 	type InvoiceItem = {
 		name: string;
@@ -53,7 +61,25 @@
 		showEditModal = false;
 	}
 
+	let seeded = $state(false);
 	let invoiceItems = $state<InvoiceItem[]>([]);
+
+	$effect(() => {
+		if (initialItems && !seeded) {
+			seeded = true;
+			for (const item of initialItems) {
+				const t = item.quantity * itemPrice;
+				invoiceItems.push({
+					name: item.name,
+					description: item.description,
+					price: itemPrice,
+					quantity: item.quantity,
+					total: t
+				});
+				total = total + t;
+			}
+		}
+	});
 
 	let itemName = $state('');
 	let itemDescription = $state('');
