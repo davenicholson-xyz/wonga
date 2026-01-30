@@ -13,7 +13,7 @@
 
 	export function show(d: string, entry?: Entry) {
 		date = d;
-		location = entry?.location ?? '';
+		location = entry?.location ?? 'UPol';
 		startTime = entry?.start_time ?? '06:00';
 		endTime = entry?.end_time ?? '16:00';
 		hasEntry = !!entry;

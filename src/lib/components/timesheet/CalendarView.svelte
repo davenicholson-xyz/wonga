@@ -64,43 +64,47 @@
 	}
 
 	function onWeekClick(week: Week) {
-		console.log('Week clicked:', week.number);
+		const days = week.days
+			.filter((c) => c.current)
+			.map((c) => {
+				const d = new Date(year, month - 1, c.day);
+				return { date: c.date, dayOfWeek: d.getDay(), entry: c.entry };
+			});
+		modals.weekView.show(days, week.number);
 	}
 
 	const modals = getTimeSheetModalControls();
 </script>
 
-<div class="grid grid-cols-[auto_repeat(7,1fr)] gap-x-1 gap-y-2 items-center">
+<div class="grid grid-cols-[auto_repeat(7,1fr)] gap-x-1 gap-y-2 py-4 items-center">
 	<div></div>
-	{#each ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as label}
+	{#each ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as label (label)}
 		<div class="text-center text-xs font-bold text-base-content/60 pb-1">{label}</div>
 	{/each}
 
-	{#each weeks as week}
+	{#each weeks as week (week.number)}
 		<button
 			class="btn btn-ghost btn-xs text-xs text-base-content/40 w-8"
 			onclick={() => onWeekClick(week)}
 		>
 			{week.number}
 		</button>
-		{#each week.days as cell}
+		{#each week.days as cell (cell)}
 			<button
-				class="btn btn-sm btn-ghost aspect-square text-sm relative"
+				class="btn btn-ghost text-sm flex flex-col items-center justify-start pt-1.5 h-10 min-w-0"
 				class:opacity-20={!cell.current}
 				onclick={() => {
 					if (!cell.current) return;
-					console.log('cell.date:', cell.date);
-					console.log('entryByDate keys:', [...entryByDate.keys()]);
-					console.log('match:', entryByDate.get(cell.date));
 					modals.newEntry.show(cell.date, entryByDate.get(cell.date));
 				}}
 			>
 				{cell.day}
-				{#if cell.entry}
-					<span
-						class="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-primary"
-					></span>
-				{/if}
+				<span
+					class="min-w-1.5 max-w-1.5 h-1.5 rounded-full mt-0.5"
+					class:bg-warning={cell.entry?.start_time === '06:00'}
+					class:bg-info={cell.entry && cell.entry.start_time !== '06:00'}
+					class:invisible={!cell.entry}
+				></span>
 			</button>
 		{/each}
 	{/each}

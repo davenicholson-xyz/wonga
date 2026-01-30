@@ -5,6 +5,7 @@
 	import CalendarView from '$lib/components/timesheet/CalendarView.svelte';
 	import TimesheetEntryModal from '$lib/components/timesheet/TimesheetEntryModal.svelte';
 	import { resolve } from '$app/paths';
+	import WeekViewModal from '$lib/components/timesheet/WeekViewModal.svelte';
 
 	const year = $derived(page.params.year) as string;
 	const month = $derived(page.params.month) as string;
@@ -30,11 +31,17 @@
 	);
 
 	let timesheetEntryModal: ReturnType<typeof TimesheetEntryModal>;
+	let weekViewModal: ReturnType<typeof WeekViewModal>;
 
 	setTimeSheetModalControls({
 		newEntry: {
 			show: (date, entry) => {
 				timesheetEntryModal.show(date, entry);
+			}
+		},
+		weekView: {
+			show: (days, weekNumber) => {
+				weekViewModal.show(days, weekNumber);
 			}
 		}
 	});
@@ -73,3 +80,4 @@
 <CalendarView {year} {month} />
 
 <TimesheetEntryModal bind:this={timesheetEntryModal} />
+<WeekViewModal bind:this={weekViewModal} />

@@ -1,9 +1,18 @@
 import { getContext, setContext } from 'svelte';
 
-type Entry = { id: string; date: string; location: string; start_time: string; end_time: string };
+export type Entry = {
+	id: string;
+	date: string;
+	location: string;
+	start_time: string;
+	end_time: string;
+};
+
+type Day = { date: string; dayOfWeek: number; entry?: Entry };
 
 type TimeSheetModalControls = {
 	newEntry: { show: (date: string, entry?: Entry) => void };
+	weekView: { show: (days: Day[], weekNumber: number) => void };
 };
 
 const key = Symbol('timesheet-modals');
