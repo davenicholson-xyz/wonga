@@ -5,8 +5,34 @@ import { customer, invoice } from '$lib/server/db/schema';
 import { redirect } from '@sveltejs/kit';
 import * as v from 'valibot';
 
+export const get_invoice = query(v.number(), async (invoice_number) => {
+	const results = await db
+		.select({
+			id: invoice.id,
+			invoice_number: invoice.invoice_number,
+			invoice_date: invoice.invoice_date,
+			due_date: invoice.due_date,
+			items: invoice.items,
+			total: invoice.total,
+			paid: invoice.paid,
+			customer_name: customer.name,
+			customer_email: customer.email,
+			customer_address: customer.address
+		})
+		.from(invoice)
+		.innerJoin(customer, eq(invoice.customer_id, customer.id))
+		.where(eq(invoice.invoice_number, invoice_number));
+	return results[0] ?? null;
+});
+
 export const mark_paid = command(v.string(), async (id) => {
-	await db.update(invoice).set({ paid: 1 }).where(eq(invoice.id, id));
+	const [{ invoice_number }] = await db
+		.update(invoice)
+		.set({ paid: 1 })
+		.where(eq(invoice.id, id))
+		.returning({ invoice_number: invoice.invoice_number });
+
+	get_invoice(invoice_number).refresh();
 	get_invoices().refresh();
 });
 

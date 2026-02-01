@@ -46,6 +46,7 @@
 	"dependencies": {
 		"@drop-in/graffiti": "^4.12.2",
 		"better-sqlite3": "^12.5.0",
+		"pdfkit": "^0.17.2",
 		"valibot": "^1.2.0"
 	}
 }

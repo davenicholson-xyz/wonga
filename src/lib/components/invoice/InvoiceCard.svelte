@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { mark_paid } from '$lib/funcs/invoices.remote';
 
 	let { invoice } = $props();
@@ -10,7 +11,7 @@
 <div>
 	<h2>{invoice.customer_name}</h2>
 	<p>PAID: {invoice.paid}</p>
-	<p>INV-{invoice.invoice_number}</p>
+	<a href={resolve(`/invoices/${invoice.invoice_number}`)}>INV-{invoice.invoice_number}</a>
 	<p>Invoice Date: {new Date(invoice.invoice_date).toLocaleDateString('en-GB')}</p>
 	<p>Due Date: {new Date(invoice.due_date).toLocaleDateString('en-GB')}</p>
 	<p>Due in <span>{dueInDays}</span> days</p>
