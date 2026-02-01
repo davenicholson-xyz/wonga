@@ -74,6 +74,8 @@
 		modals.weekView.show(days, week.number);
 	}
 
+	const currentWeek = getISOWeekNumber(new Date());
+
 	const modals = getTimeSheetModalControls();
 </script>
 
@@ -85,7 +87,9 @@
 
 	{#each weeks as week (week.number)}
 		<button
-			class="btn btn-ghost btn-xs text-xs text-base-content/40 w-8"
+			class="btn btn-ghost btn-xs text-xs w-8 {week.number === currentWeek
+				? 'btn-primary'
+				: 'text-base-content/40'}"
 			onclick={() => onWeekClick(week)}
 		>
 			{week.number}
