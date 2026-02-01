@@ -1,9 +1,14 @@
 import { db } from '$lib/server/db';
-import { invoice, customer } from '$lib/server/db/schema';
+import { invoice, customer, settings } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { error } from '@sveltejs/kit';
 import { generateInvoicePdf } from '$lib/server/pdf';
 import type { RequestHandler } from './$types';
+
+async function getSetting(key: string) {
+	const result = await db.select().from(settings).where(eq(settings.key, key));
+	return result[0]?.value;
+}
 
 export const GET: RequestHandler = async ({ params }) => {
 	const invoiceNumber = parseInt(params.number);
@@ -28,7 +33,13 @@ export const GET: RequestHandler = async ({ params }) => {
 	const inv = results[0];
 	if (!inv) throw error(404, 'Invoice not found');
 
-	const pdfBuffer = await generateInvoicePdf(inv);
+	const [payto, account, sort] = await Promise.all([
+		getSetting('invoice_payto'),
+		getSetting('invoice_account'),
+		getSetting('invoice_sort')
+	]);
+
+	const pdfBuffer = await generateInvoicePdf(inv, { payto, account, sort });
 
 	return new Response(pdfBuffer, {
 		headers: {

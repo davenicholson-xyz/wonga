@@ -19,7 +19,16 @@ type InvoiceData = {
 	customer_address: string;
 };
 
-export async function generateInvoicePdf(inv: InvoiceData): Promise<Buffer> {
+type PaymentDetails = {
+	payto?: string;
+	account?: string;
+	sort?: string;
+};
+
+export async function generateInvoicePdf(
+	inv: InvoiceData,
+	payment?: PaymentDetails
+): Promise<Buffer> {
 	type InvoiceItem = {
 		name: string;
 		description: string;
@@ -67,7 +76,10 @@ export async function generateInvoicePdf(inv: InvoiceData): Promise<Buffer> {
 			detailsY + 12
 		);
 
-	doc.fontSize(8).fillColor(light).text('DUE DATE', 50, detailsY + 35);
+	doc
+		.fontSize(8)
+		.fillColor(light)
+		.text('DUE DATE', 50, detailsY + 35);
 	doc
 		.fontSize(10)
 		.fillColor(dark)
@@ -83,7 +95,10 @@ export async function generateInvoicePdf(inv: InvoiceData): Promise<Buffer> {
 
 	const rightX = 350;
 	doc.fontSize(8).fillColor(light).text('BILL TO', rightX, detailsY);
-	doc.fontSize(10).fillColor(dark).text(inv.customer_name, rightX, detailsY + 12);
+	doc
+		.fontSize(10)
+		.fillColor(dark)
+		.text(inv.customer_name, rightX, detailsY + 12);
 
 	let billY = detailsY + 26;
 	if (inv.customer_address) {
@@ -164,10 +179,13 @@ export async function generateInvoicePdf(inv: InvoiceData): Promise<Buffer> {
 		.stroke();
 
 	const totalY = rowY + 20;
-	doc.fontSize(8).fillColor(light).text('TOTAL', col4, totalY, {
-		width: pageRight - col4,
-		align: 'right'
-	});
+	doc
+		.fontSize(8)
+		.fillColor(light)
+		.text('TOTAL', col4, totalY, {
+			width: pageRight - col4,
+			align: 'right'
+		});
 	doc
 		.fontSize(18)
 		.fillColor(dark)
@@ -175,6 +193,45 @@ export async function generateInvoicePdf(inv: InvoiceData): Promise<Buffer> {
 			width: pageRight - col4,
 			align: 'right'
 		});
+
+	// -- Payment details --
+	if (payment?.payto || payment?.account || payment?.sort) {
+		let payY = totalY + 150;
+
+		doc
+			.moveTo(col1, payY - 5)
+			.lineTo(pageRight, payY - 5)
+			.strokeColor('#e5e7eb')
+			.lineWidth(1)
+			.stroke();
+
+		doc.fontSize(8).fillColor(light).text('PAYMENT DETAILS', col1, payY);
+		payY += 15;
+
+		if (payment.payto) {
+			doc.fontSize(8).fillColor(light).text('PAY TO', col1, payY);
+			doc
+				.fontSize(10)
+				.fillColor(dark)
+				.text(payment.payto, col1, payY + 12);
+			payY += 30;
+		}
+		if (payment.account) {
+			doc.fontSize(8).fillColor(light).text('ACCOUNT', col1, payY);
+			doc
+				.fontSize(10)
+				.fillColor(dark)
+				.text(payment.account, col1, payY + 12);
+			payY += 30;
+		}
+		if (payment.sort) {
+			doc.fontSize(8).fillColor(light).text('SORT CODE', col1, payY);
+			doc
+				.fontSize(10)
+				.fillColor(dark)
+				.text(payment.sort, col1, payY + 12);
+		}
+	}
 
 	doc.end();
 

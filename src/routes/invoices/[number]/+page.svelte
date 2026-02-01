@@ -3,7 +3,6 @@
 	import { resolve } from '$app/paths';
 	import { formatCurrency } from '$lib/helpers';
 	import { get_invoice, mark_paid, send_invoice } from '$lib/funcs/invoices.remote';
-
 	const { number } = page.params as { number: string };
 
 	const data = get_invoice(parseInt(number));
@@ -19,7 +18,6 @@
 	const items = $derived<InvoiceItem[]>(inv ? JSON.parse(inv.items) : []);
 
 	let sending = $state(false);
-	let sent = $state(false);
 	let uploading = $state(false);
 	let fileInput: HTMLInputElement;
 
@@ -38,7 +36,6 @@
 		sending = true;
 		try {
 			await send_invoice(parseInt(number));
-			sent = true;
 		} finally {
 			sending = false;
 		}
@@ -171,9 +168,6 @@
 		<!-- Timesheet image -->
 		<div class="card bg-base-100 shadow-sm border border-base-300">
 			<div class="card-body p-6 pt-5">
-				<h2 class="text-sm font-bold text-base-content/50 uppercase tracking-wide mb-3">
-					Timesheet
-				</h2>
 				{#if inv.timesheet_image}
 					<img
 						src={resolve(`/uploads/${inv.timesheet_image}`)}
@@ -228,7 +222,7 @@
 			<button
 				class="btn btn-secondary btn-sm flex-1"
 				onclick={emailInvoice}
-				disabled={sending || sent}
+				disabled={sending || inv.emailed}
 			>
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
@@ -245,8 +239,8 @@
 				</svg>
 				{#if sending}
 					Sending...
-				{:else if sent}
-					Sent!
+				{:else if inv.emailed}
+					Emailed
 				{:else}
 					Email Invoice
 				{/if}

@@ -1,7 +1,7 @@
 import { form, query, command } from '$app/server';
 import { desc, eq } from 'drizzle-orm';
 import { db } from '$lib/server/db';
-import { customer, invoice } from '$lib/server/db/schema';
+import { customer, invoice, settings } from '$lib/server/db/schema';
 import { redirect } from '@sveltejs/kit';
 import { generateInvoicePdf } from '$lib/server/pdf';
 import { createTransport } from 'nodemailer';
@@ -20,6 +20,7 @@ export const get_invoice = query(v.number(), async (invoice_number) => {
 			items: invoice.items,
 			total: invoice.total,
 			paid: invoice.paid,
+			emailed: invoice.emailed,
 			timesheet_image: invoice.timesheet_image,
 			customer_name: customer.name,
 			customer_email: customer.email,
@@ -89,7 +90,18 @@ export const send_invoice = command(v.number(), async (invoice_number) => {
 	const inv = results[0];
 	if (!inv) throw new Error('Invoice not found');
 
-	const pdfBuffer = await generateInvoicePdf(inv);
+	const getSettingValue = async (key: string) => {
+		const result = await db.select().from(settings).where(eq(settings.key, key));
+		return result[0]?.value;
+	};
+
+	const [payto, account, sort] = await Promise.all([
+		getSettingValue('invoice_payto'),
+		getSettingValue('invoice_account'),
+		getSettingValue('invoice_sort')
+	]);
+
+	const pdfBuffer = await generateInvoicePdf(inv, { payto, account, sort });
 
 	const attachments: { filename: string; content: Buffer; contentType: string }[] = [
 		{
@@ -128,6 +140,9 @@ export const send_invoice = command(v.number(), async (invoice_number) => {
 		text: `Hi ${inv.customer_name},\n\nPlease find attached invoice INV-${inv.invoice_number}.\n\nThank you.`,
 		attachments
 	});
+
+	await db.update(invoice).set({ emailed: 1 }).where(eq(invoice.id, inv.id));
+	get_invoice(invoice_number).refresh();
 });
 
 export const create_invoice = form(
