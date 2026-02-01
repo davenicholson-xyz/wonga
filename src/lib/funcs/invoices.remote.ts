@@ -3,6 +3,11 @@ import { desc, eq } from 'drizzle-orm';
 import { db } from '$lib/server/db';
 import { customer, invoice } from '$lib/server/db/schema';
 import { redirect } from '@sveltejs/kit';
+import { generateInvoicePdf } from '$lib/server/pdf';
+import { createTransport } from 'nodemailer';
+import { env } from '$env/dynamic/private';
+import { readFile } from 'fs/promises';
+import { join } from 'path';
 import * as v from 'valibot';
 
 export const get_invoice = query(v.number(), async (invoice_number) => {
@@ -15,6 +20,7 @@ export const get_invoice = query(v.number(), async (invoice_number) => {
 			items: invoice.items,
 			total: invoice.total,
 			paid: invoice.paid,
+			timesheet_image: invoice.timesheet_image,
 			customer_name: customer.name,
 			customer_email: customer.email,
 			customer_address: customer.address
@@ -59,6 +65,69 @@ export const get_invoices = query(async () => {
 		})
 		.from(invoice)
 		.innerJoin(customer, eq(invoice.customer_id, customer.id));
+});
+
+export const send_invoice = command(v.number(), async (invoice_number) => {
+	const results = await db
+		.select({
+			id: invoice.id,
+			invoice_number: invoice.invoice_number,
+			invoice_date: invoice.invoice_date,
+			due_date: invoice.due_date,
+			items: invoice.items,
+			total: invoice.total,
+			paid: invoice.paid,
+			timesheet_image: invoice.timesheet_image,
+			customer_name: customer.name,
+			customer_email: customer.email,
+			customer_address: customer.address
+		})
+		.from(invoice)
+		.innerJoin(customer, eq(invoice.customer_id, customer.id))
+		.where(eq(invoice.invoice_number, invoice_number));
+
+	const inv = results[0];
+	if (!inv) throw new Error('Invoice not found');
+
+	const pdfBuffer = await generateInvoicePdf(inv);
+
+	const attachments: { filename: string; content: Buffer; contentType: string }[] = [
+		{
+			filename: `INV-${inv.invoice_number}.pdf`,
+			content: pdfBuffer,
+			contentType: 'application/pdf'
+		}
+	];
+
+	if (inv.timesheet_image) {
+		const imagePath = join(process.cwd(), 'uploads', inv.timesheet_image);
+		const imageBuffer = await readFile(imagePath);
+		const ext = inv.timesheet_image.split('.').pop()?.toLowerCase() ?? 'png';
+		const mimeType = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
+		attachments.push({
+			filename: inv.timesheet_image,
+			content: imageBuffer,
+			contentType: mimeType
+		});
+	}
+
+	const transporter = createTransport({
+		host: env.SMTP_HOST,
+		port: Number(env.SMTP_PORT),
+		secure: true,
+		auth: {
+			user: env.SMTP_USER,
+			pass: env.SMTP_PASS
+		}
+	});
+
+	await transporter.sendMail({
+		from: env.SMTP_FROM,
+		to: inv.customer_email,
+		subject: `Invoice INV-${inv.invoice_number}`,
+		text: `Hi ${inv.customer_name},\n\nPlease find attached invoice INV-${inv.invoice_number}.\n\nThank you.`,
+		attachments
+	});
 });
 
 export const create_invoice = form(

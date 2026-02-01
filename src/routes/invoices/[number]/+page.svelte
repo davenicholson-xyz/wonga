@@ -2,7 +2,7 @@
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import { formatCurrency } from '$lib/helpers';
-	import { get_invoice, mark_paid } from '$lib/funcs/invoices.remote';
+	import { get_invoice, mark_paid, send_invoice } from '$lib/funcs/invoices.remote';
 
 	const { number } = page.params as { number: string };
 
@@ -17,6 +17,49 @@
 	};
 
 	const items = $derived<InvoiceItem[]>(inv ? JSON.parse(inv.items) : []);
+
+	let sending = $state(false);
+	let sent = $state(false);
+	let uploading = $state(false);
+	let fileInput: HTMLInputElement;
+
+	let showTimesheetWarning = $state(false);
+
+	async function emailInvoice() {
+		if (!inv?.timesheet_image) {
+			showTimesheetWarning = true;
+			return;
+		}
+		await doSendInvoice();
+	}
+
+	async function doSendInvoice() {
+		showTimesheetWarning = false;
+		sending = true;
+		try {
+			await send_invoice(parseInt(number));
+			sent = true;
+		} finally {
+			sending = false;
+		}
+	}
+
+	async function uploadTimesheet(e: Event) {
+		const input = e.target as HTMLInputElement;
+		const file = input.files?.[0];
+		if (!file) return;
+
+		uploading = true;
+		try {
+			const formData = new FormData();
+			formData.append('file', file);
+			await fetch(resolve(`/invoices/${number}/upload`), { method: 'POST', body: formData });
+			data.refresh();
+		} finally {
+			uploading = false;
+			input.value = '';
+		}
+	}
 </script>
 
 {#if inv}
@@ -125,14 +168,107 @@
 			</div>
 		</div>
 
-		<a href={resolve(`/invoices/${number}/pdf`)} class="btn btn-primary btn-sm w-full">
-			<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 1024 1024">
-				<path
-					fill="currentColor"
-					d="m531.3 574.4l.3-1.4c5.8-23.9 13.1-53.7 7.4-80.7c-3.8-21.3-19.5-29.6-32.9-30.2c-15.8-.7-29.9 8.3-33.4 21.4c-6.6 24-.7 56.8 10.1 98.6c-13.6 32.4-35.3 79.5-51.2 107.5c-29.6 15.3-69.3 38.9-75.2 68.7c-1.2 5.5.2 12.5 3.5 18.8c3.7 7 9.6 12.4 16.5 15c3 1.1 6.6 2 10.8 2c17.6 0 46.1-14.2 84.1-79.4c5.8-1.9 11.8-3.9 17.6-5.9c27.2-9.2 55.4-18.8 80.9-23.1c28.2 15.1 60.3 24.8 82.1 24.8c21.6 0 30.1-12.8 33.3-20.5c5.6-13.5 2.9-30.5-6.2-39.6c-13.2-13-45.3-16.4-95.3-10.2c-24.6-15-40.7-35.4-52.4-65.8M421.6 726.3c-13.9 20.2-24.4 30.3-30.1 34.7c6.7-12.3 19.8-25.3 30.1-34.7m87.6-235.5c5.2 8.9 4.5 35.8.5 49.4c-4.9-19.9-5.6-48.1-2.7-51.4c.8.1 1.5.7 2.2 2m-1.6 120.5c10.7 18.5 24.2 34.4 39.1 46.2c-21.6 4.9-41.3 13-58.9 20.2c-4.2 1.7-8.3 3.4-12.3 5c13.3-24.1 24.4-51.4 32.1-71.4m155.6 65.5c.1.2.2.5-.4.9h-.2l-.2.3c-.8.5-9 5.3-44.3-8.6c40.6-1.9 45 7.3 45.1 7.4m191.4-388.2L639.4 73.4c-6-6-14.1-9.4-22.6-9.4H192c-17.7 0-32 14.3-32 32v832c0 17.7 14.3 32 32 32h640c17.7 0 32-14.3 32-32V311.3c0-8.5-3.4-16.7-9.4-22.7M790.2 326H602V137.8zm1.8 562H232V136h302v216a42 42 0 0 0 42 42h216z"
+		<!-- Timesheet image -->
+		<div class="card bg-base-100 shadow-sm border border-base-300">
+			<div class="card-body p-6 pt-5">
+				<h2 class="text-sm font-bold text-base-content/50 uppercase tracking-wide mb-3">
+					Timesheet
+				</h2>
+				{#if inv.timesheet_image}
+					<img
+						src={resolve(`/uploads/${inv.timesheet_image}`)}
+						alt="Timesheet"
+						class="rounded-lg w-full"
+					/>
+					<button
+						class="btn btn-ghost btn-sm mt-2 w-full opacity-50"
+						onclick={() => fileInput.click()}
+						disabled={uploading}
+					>
+						{uploading ? 'Uploading...' : 'Replace Image'}
+					</button>
+				{:else}
+					<button
+						class="btn btn-ghost btn-sm w-full opacity-50"
+						onclick={() => fileInput.click()}
+						disabled={uploading}
+					>
+						{uploading ? 'Uploading...' : '+ Upload Timesheet Image'}
+					</button>
+				{/if}
+				<input
+					bind:this={fileInput}
+					type="file"
+					accept="image/jpeg,image/png,image/webp"
+					class="hidden"
+					onchange={uploadTimesheet}
 				/>
-			</svg>
-			Generate PDF
-		</a>
+			</div>
+		</div>
+
+		<div class="flex gap-2">
+			<a href={resolve(`/invoices/${number}/pdf`)} class="btn btn-primary btn-sm flex-1">
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					class="size-4"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				>
+					<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+					<polyline points="14 2 14 8 20 8" />
+					<line x1="16" y1="13" x2="8" y2="13" />
+					<line x1="16" y1="17" x2="8" y2="17" />
+				</svg>
+				Generate PDF
+			</a>
+			<button
+				class="btn btn-secondary btn-sm flex-1"
+				onclick={emailInvoice}
+				disabled={sending || sent}
+			>
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					class="size-4"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				>
+					<rect width="20" height="16" x="2" y="4" rx="2" />
+					<path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+				</svg>
+				{#if sending}
+					Sending...
+				{:else if sent}
+					Sent!
+				{:else}
+					Email Invoice
+				{/if}
+			</button>
+		</div>
 	</div>
+
+	<dialog class="modal" class:modal-open={showTimesheetWarning}>
+		<div class="modal-box">
+			<h3 class="font-bold text-lg">No Timesheet Attached</h3>
+			<p class="py-4 text-sm text-base-content/70">
+				This invoice has no timesheet image attached. Do you still want to send it?
+			</p>
+			<div class="modal-action">
+				<button class="btn btn-ghost btn-sm" onclick={() => (showTimesheetWarning = false)}>
+					Cancel
+				</button>
+				<button class="btn btn-primary btn-sm" onclick={doSendInvoice}> Send Anyway </button>
+			</div>
+		</div>
+		<form method="dialog" class="modal-backdrop">
+			<button onclick={() => (showTimesheetWarning = false)}>close</button>
+		</form>
+	</dialog>
 {/if}

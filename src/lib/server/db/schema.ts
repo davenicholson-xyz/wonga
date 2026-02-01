@@ -19,7 +19,8 @@ export const invoice = sqliteTable('invoice', {
 	due_date: integer('due_date', { mode: 'timestamp' }).notNull(),
 	items: text('items').notNull(),
 	total: integer('total').notNull(),
-	paid: integer('paid').notNull().default(0)
+	paid: integer('paid').notNull().default(0),
+	timesheet_image: text('timesheet_image')
 });
 
 export const income = sqliteTable('income', {
