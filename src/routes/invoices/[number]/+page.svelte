@@ -3,10 +3,14 @@
 	import { resolve } from '$app/paths';
 	import { formatCurrency } from '$lib/helpers';
 	import { get_invoice, mark_paid, send_invoice } from '$lib/funcs/invoices.remote';
+	import { get_payment_settings } from '$lib/funcs/settings.remote';
 	const { number } = page.params as { number: string };
 
 	const data = get_invoice(parseInt(number));
 	const inv = $derived(data.current);
+
+	const settingsData = get_payment_settings();
+	const ps = $derived(settingsData.current);
 
 	type InvoiceItem = {
 		name: string;
@@ -81,7 +85,24 @@
 		<!-- Invoice document -->
 		<div class="card bg-base-100 shadow-sm border border-base-300">
 			<div class="card-body p-6 pt-5 text-sm">
-				<!-- Top section: Invoice info + Customer -->
+				<!-- From + Invoice info -->
+				{#if ps?.payment_name || ps?.address || ps?.email}
+					<div class="space-y-0.5 text-base-content/70 mb-4">
+						{#if ps.payment_name}
+							<p class="font-medium text-base-content">{ps.payment_name}</p>
+						{/if}
+						{#if ps.address}
+							{#each ps.address.split('\n') as line (line)}
+								<p>{line}</p>
+							{/each}
+						{/if}
+						{#if ps.email}
+							<p>{ps.email}</p>
+						{/if}
+					</div>
+				{/if}
+
+				<!-- Invoice info + Customer -->
 				<div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
 					<div>
 						<div class="space-y-0.5 text-base-content/70">
@@ -162,6 +183,30 @@
 						<div class="text-lg font-bold">{formatCurrency(inv.total)}</div>
 					</div>
 				</div>
+
+				<!-- Payment details -->
+				{#if ps?.payment_name || ps?.account_number || ps?.sort_code}
+					<div class="divider my-3"></div>
+					<div>
+						<h2 class="text-xs font-bold text-base-content/50 uppercase tracking-wide mb-2">
+							Payment Details
+						</h2>
+						<div class="space-y-0.5 text-base-content/70">
+							{#if ps.payment_name}
+								<p><span class="font-medium text-base-content">Pay to:</span> {ps.payment_name}</p>
+							{/if}
+							{#if ps.account_number}
+								<p>
+									<span class="font-medium text-base-content">Account:</span>
+									{ps.account_number}
+								</p>
+							{/if}
+							{#if ps.sort_code}
+								<p><span class="font-medium text-base-content">Sort Code:</span> {ps.sort_code}</p>
+							{/if}
+						</div>
+					</div>
+				{/if}
 			</div>
 		</div>
 

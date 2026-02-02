@@ -23,6 +23,8 @@ type PaymentDetails = {
 	payto?: string;
 	account?: string;
 	sort?: string;
+	address?: string;
+	email?: string;
 };
 
 export async function generateInvoicePdf(
@@ -62,23 +64,21 @@ export async function generateInvoicePdf(
 
 	// -- Sender details (FROM) --
 	const fromY = 110;
-	// doc.fontSize(8).fillColor(light).text('FROM', 50, fromY);
-	doc
-		.fontSize(10)
-		.fillColor(dark)
-		.text('Dave Nicholson', 50, fromY + 12);
-	doc
-		.fontSize(9)
-		.fillColor(grey)
-		.text('19 Babbage Crescent', 50, fromY + 26);
-	doc
-		.fontSize(9)
-		.fillColor(grey)
-		.text('Corby, Northamptonshire, NN17 4AJ', 50, fromY + 39);
-	doc
-		.fontSize(9)
-		.fillColor(grey)
-		.text('d@venicholson.com', 50, fromY + 52);
+	let fromLineY = fromY + 12;
+
+	if (payment?.payto) {
+		doc.fontSize(10).fillColor(dark).text(payment.payto, 50, fromLineY);
+		fromLineY += 14;
+	}
+	if (payment?.address) {
+		for (const line of payment.address.split('\n')) {
+			doc.fontSize(9).fillColor(grey).text(line, 50, fromLineY);
+			fromLineY += 13;
+		}
+	}
+	if (payment?.email) {
+		doc.fontSize(9).fillColor(grey).text(payment.email, 50, fromLineY);
+	}
 
 	const detailsY = 200;
 

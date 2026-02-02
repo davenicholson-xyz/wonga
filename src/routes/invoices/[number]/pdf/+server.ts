@@ -33,13 +33,15 @@ export const GET: RequestHandler = async ({ params }) => {
 	const inv = results[0];
 	if (!inv) throw error(404, 'Invoice not found');
 
-	const [payto, account, sort] = await Promise.all([
-		getSetting('invoice_payto'),
-		getSetting('invoice_account'),
-		getSetting('invoice_sort')
+	const [payto, account, sort, address, email] = await Promise.all([
+		getSetting('payment_name'),
+		getSetting('account_number'),
+		getSetting('sort_code'),
+		getSetting('address'),
+		getSetting('email')
 	]);
 
-	const pdfBuffer = await generateInvoicePdf(inv, { payto, account, sort });
+	const pdfBuffer = await generateInvoicePdf(inv, { payto, account, sort, address, email });
 
 	return new Response(pdfBuffer, {
 		headers: {
