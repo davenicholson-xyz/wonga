@@ -65,7 +65,8 @@ export const get_invoices = query(async () => {
 			paid: invoice.paid
 		})
 		.from(invoice)
-		.innerJoin(customer, eq(invoice.customer_id, customer.id));
+		.innerJoin(customer, eq(invoice.customer_id, customer.id))
+		.orderBy(desc(invoice.invoice_number));
 });
 
 export const send_invoice = command(v.number(), async (invoice_number) => {

@@ -1,6 +1,8 @@
 import { redirect } from '@sveltejs/kit';
 
-const this_month = (new Date().getMonth() + 1) as number;
-const this_year = parseInt(new Date().getFullYear().toString());
+export const load = () => {
+	const this_month = new Date().getMonth() + 1;
+	const this_year = new Date().getFullYear();
 
-redirect(307, `/income/${this_year}/${this_month}`);
+	redirect(307, `/income/${this_year}/${this_month}`);
+};

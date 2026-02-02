@@ -42,6 +42,6 @@ export const get_income_for = query(
 		});
 		const net = gross - (gross * tax_percent) / 100;
 
-		return { invoices, total: gross, net };
+		return { invoices, total: gross, net, tax_percent };
 	}
 );
