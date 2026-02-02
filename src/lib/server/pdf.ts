@@ -52,7 +52,7 @@ export async function generateInvoicePdf(
 	const light = '#9ca3af';
 	const accent = '#4f46e5';
 
-	doc.fontSize(28).fillColor(accent).text('INVOICE', 50, 50);
+	doc.fontSize(18).fillColor(accent).text('INVOICE', 50, 50);
 
 	doc.fontSize(10).fillColor(dark).text(`INV-${inv.invoice_number}`, 50, 85);
 
@@ -60,7 +60,27 @@ export async function generateInvoicePdf(
 		doc.fontSize(10).fillColor('#16a34a').text('PAID', 150, 85);
 	}
 
-	const detailsY = 120;
+	// -- Sender details (FROM) --
+	const fromY = 110;
+	// doc.fontSize(8).fillColor(light).text('FROM', 50, fromY);
+	doc
+		.fontSize(10)
+		.fillColor(dark)
+		.text('Dave Nicholson', 50, fromY + 12);
+	doc
+		.fontSize(9)
+		.fillColor(grey)
+		.text('19 Babbage Crescent', 50, fromY + 26);
+	doc
+		.fontSize(9)
+		.fillColor(grey)
+		.text('Corby, Northamptonshire, NN17 4AJ', 50, fromY + 39);
+	doc
+		.fontSize(9)
+		.fillColor(grey)
+		.text('d@venicholson.com', 50, fromY + 52);
+
+	const detailsY = 200;
 
 	doc.fontSize(8).fillColor(light).text('INVOICE DATE', 50, detailsY);
 	doc
@@ -111,7 +131,7 @@ export async function generateInvoicePdf(
 		doc.fontSize(9).fillColor(grey).text(inv.customer_email, rightX, billY);
 	}
 
-	const tableTop = 220;
+	const tableTop = 280;
 	const col1 = 50;
 	const col2 = 310;
 	const col3 = 390;

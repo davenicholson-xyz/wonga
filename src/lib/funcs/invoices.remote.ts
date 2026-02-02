@@ -163,6 +163,6 @@ export const create_invoice = form(
 			items,
 			total
 		});
-		redirect(307, '/invoices');
+		redirect(307, `/invoices/${invoice_number}`);
 	}
 );
