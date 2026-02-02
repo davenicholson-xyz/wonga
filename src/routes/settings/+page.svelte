@@ -1,5 +1,6 @@
 <script>
 	import { get_payment_settings, save_payment_settings } from '$lib/funcs/settings.remote';
+	import { get_customers, update_customer, delete_customer } from '$lib/funcs/customers.remote';
 
 	const data = get_payment_settings();
 	const current = $derived(data.current);
@@ -31,14 +32,72 @@
 		saved = true;
 		setTimeout(() => (saved = false), 2000);
 	}
+
+	// Customers
+	const customersData = get_customers();
+	const customers = $derived(customersData.current ?? []);
+
+	/** @type {HTMLDialogElement} */
+	let editModal;
+	/** @type {HTMLDialogElement} */
+	let deleteModal;
+	let editId = $state('');
+	let editName = $state('');
+	let editAddress = $state('');
+	let editEmail = $state('');
+	let editSaving = $state(false);
+
+	let deleteId = $state('');
+	let deleteName = $state('');
+	let deleteError = $state('');
+	let deleting = $state(false);
+
+	/** @param {{id: string, name: string, address: string, email: string}} c */
+	function openEdit(c) {
+		editId = c.id;
+		editName = c.name;
+		editAddress = c.address;
+		editEmail = c.email;
+		editSaving = false;
+		editModal.showModal();
+	}
+
+	async function saveEdit() {
+		editSaving = true;
+		await update_customer({ id: editId, name: editName, address: editAddress, email: editEmail });
+		customersData.refresh();
+		editSaving = false;
+		editModal.close();
+	}
+
+	/** @param {{id: string, name: string}} c */
+	function openDelete(c) {
+		deleteId = c.id;
+		deleteName = c.name;
+		deleteError = '';
+		deleting = false;
+		deleteModal.showModal();
+	}
+
+	async function confirmDelete() {
+		deleting = true;
+		deleteError = '';
+		try {
+			await delete_customer({ id: deleteId });
+			customersData.refresh();
+			deleteModal.close();
+		} catch (/** @type {any} */ e) {
+			deleteError = e?.message ?? 'Failed to delete customer';
+		}
+		deleting = false;
+	}
 </script>
 
 <h1 class="text-2xl font-bold mb-6">Settings</h1>
 
-<div class="card bg-base-200 shadow-sm">
-	<div class="card-body p-4">
-		<h2 class="card-title text-base mb-2">Payment Details</h2>
-
+<div class="tabs tabs-lift">
+	<input type="radio" name="settings_tabs" class="tab" aria-label="Payment Details" checked />
+	<div class="tab-content bg-base-200 border-base-300 p-4">
 		<div class="form-control">
 			<label class="label" for="payment-name">
 				<span class="label-text">Payment Name</span>
@@ -113,4 +172,104 @@
 			{/if}
 		</div>
 	</div>
+
+	<input type="radio" name="settings_tabs" class="tab" aria-label="Customers" />
+	<div class="tab-content bg-base-200 border-base-300 p-4">
+		{#if customers.length === 0}
+			<p class="text-sm text-base-content/60">No customers yet.</p>
+		{:else}
+			<div class="flex flex-col gap-3">
+				{#each customers as c (c.id)}
+					<div class="card bg-base-100 shadow-sm">
+						<div class="card-body p-4">
+							<h3 class="font-semibold">{c.name}</h3>
+							<p class="text-sm text-base-content/60">{c.email}</p>
+							<p class="text-sm text-base-content/60 whitespace-pre-line mt-1">{c.address}</p>
+							<div class="card-actions mt-2">
+								<button class="btn btn-ghost btn-xs" onclick={() => openEdit(c)}>Edit</button>
+								<button class="btn btn-ghost btn-xs text-error" onclick={() => openDelete(c)}
+									>Delete</button
+								>
+							</div>
+						</div>
+					</div>
+				{/each}
+			</div>
+		{/if}
+	</div>
 </div>
+
+<!-- Edit Customer Modal -->
+<dialog bind:this={editModal} class="modal">
+	<div class="modal-box">
+		<h3 class="font-bold text-lg">Edit Customer</h3>
+		<div class="form-control mt-4">
+			<label class="label" for="edit-name">
+				<span class="label-text">Name</span>
+			</label>
+			<input
+				id="edit-name"
+				type="text"
+				class="input input-bordered input-sm w-full"
+				bind:value={editName}
+			/>
+		</div>
+		<div class="form-control mt-2">
+			<label class="label" for="edit-address">
+				<span class="label-text">Address</span>
+			</label>
+			<textarea
+				id="edit-address"
+				class="textarea textarea-bordered textarea-sm w-full"
+				rows="3"
+				bind:value={editAddress}
+			></textarea>
+		</div>
+		<div class="form-control mt-2">
+			<label class="label" for="edit-email">
+				<span class="label-text">Email</span>
+			</label>
+			<input
+				id="edit-email"
+				type="email"
+				class="input input-bordered input-sm w-full"
+				bind:value={editEmail}
+			/>
+		</div>
+		<div class="modal-action">
+			<button type="button" class="btn btn-ghost btn-sm" onclick={() => editModal.close()}
+				>Cancel</button
+			>
+			<button class="btn btn-primary btn-sm" onclick={saveEdit} disabled={editSaving}>
+				{editSaving ? 'Saving...' : 'Save'}
+			</button>
+		</div>
+	</div>
+	<form method="dialog" class="modal-backdrop">
+		<button>close</button>
+	</form>
+</dialog>
+
+<!-- Delete Customer Modal -->
+<dialog bind:this={deleteModal} class="modal">
+	<div class="modal-box">
+		<h3 class="font-bold text-lg">Delete Customer</h3>
+		<p class="mt-4">Are you sure you want to delete <strong>{deleteName}</strong>?</p>
+		{#if deleteError}
+			<div class="alert alert-error mt-4">
+				<span>{deleteError}</span>
+			</div>
+		{/if}
+		<div class="modal-action">
+			<button type="button" class="btn btn-ghost btn-sm" onclick={() => deleteModal.close()}
+				>Cancel</button
+			>
+			<button class="btn btn-error btn-sm" onclick={confirmDelete} disabled={deleting}>
+				{deleting ? 'Deleting...' : 'Delete'}
+			</button>
+		</div>
+	</div>
+	<form method="dialog" class="modal-backdrop">
+		<button>close</button>
+	</form>
+</dialog>
