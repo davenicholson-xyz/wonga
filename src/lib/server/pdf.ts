@@ -131,7 +131,7 @@ export async function generateInvoicePdf(
 		doc.fontSize(9).fillColor(grey).text(inv.customer_email, rightX, billY);
 	}
 
-	const tableTop = 280;
+	const tableTop = 320;
 	const col1 = 50;
 	const col2 = 310;
 	const col3 = 390;
