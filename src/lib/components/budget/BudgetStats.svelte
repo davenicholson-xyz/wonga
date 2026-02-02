@@ -18,7 +18,10 @@
 		<div class="flex justify-between">
 			<div class="text-center">
 				<div class="text-xs opacity-70">
-					{new Date().toLocaleDateString('en-GB', { month: 'long' })} Income
+					{new Date(new Date().getFullYear(), new Date().getMonth() + 1).toLocaleDateString(
+						'en-GB',
+						{ month: 'long' }
+					)} Income
 				</div>
 				<div class="text-xl font-bold">{formatCurrency(net)}</div>
 			</div>

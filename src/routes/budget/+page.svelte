@@ -11,13 +11,13 @@
 
 	import { setBudgetModalControls } from '$lib/context/budget.svelte';
 
-	const this_month = new Date().getMonth() + 1;
-	const this_year = new Date().getFullYear();
+	const now = new Date();
+	const next_month = now.getMonth() + 2 > 12 ? 1 : now.getMonth() + 2;
+	const next_month_year = now.getMonth() + 2 > 12 ? now.getFullYear() + 1 : now.getFullYear();
 
-	const income_data = get_income_for({ month: this_month, year: this_year });
+	const income_data = get_income_for({ month: next_month, year: next_month_year });
 
-	const net = 4000;
-	//const net = $derived(income_data.current?.net ?? 0);
+	const net = $derived(income_data.current?.net ?? 0);
 
 	const categories_data = get_categories_with_expenses();
 	const categories = $derived(categories_data.current?.categories ?? []);

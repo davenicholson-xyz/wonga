@@ -16,7 +16,10 @@
 </div>
 
 <div class="dock fixed bottom-0 w-full">
-	<a href={resolve('/')} class:dock-active={page.url.pathname === '/'}>
+	<a
+		href={resolve('/')}
+		class:dock-active={page.url.pathname === '/' || page.url.pathname.startsWith('/timesheet')}
+	>
 		<svg
 			xmlns="http://www.w3.org/2000/svg"
 			class="size-6"
