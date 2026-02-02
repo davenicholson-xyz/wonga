@@ -6,9 +6,33 @@
 	import TimesheetEntryModal from '$lib/components/timesheet/TimesheetEntryModal.svelte';
 	import { resolve } from '$app/paths';
 	import WeekViewModal from '$lib/components/timesheet/WeekViewModal.svelte';
+	import { get_timesheet_for_month } from '$lib/funcs/timesheet.remote';
 
 	const year = $derived(page.params.year) as string;
 	const month = $derived(page.params.month) as string;
+
+	const tmonth = $derived(get_timesheet_for_month(`${parseInt(year)}-${parseInt(month)}-1`));
+	const entries = $derived(tmonth.current ?? []);
+
+	function parseHours(start: string, end: string): number {
+		const [sh, sm] = start.split(':').map(Number);
+		const [eh, em] = end.split(':').map(Number);
+		return (eh * 60 + em - (sh * 60 + sm)) / 60;
+	}
+
+	const totalShifts = $derived(entries.length);
+	const totalHours = $derived(
+		entries.reduce((sum, e) => sum + parseHours(e.start_time, e.end_time), 0)
+	);
+	const avgHours = $derived(totalShifts > 0 ? totalHours / totalShifts : 0);
+
+	const weekdayShifts = $derived(
+		entries.filter((e) => {
+			const d = new Date(e.date).getDay();
+			return d !== 0 && d !== 6;
+		}).length
+	);
+	const weekendShifts = $derived(totalShifts - weekdayShifts);
 
 	const month_name = $derived(
 		new Date(parseInt(year), parseInt(month) - 1).toLocaleString('en-GB', {
@@ -78,6 +102,21 @@
 </div>
 
 <CalendarView />
+
+{#if totalShifts > 0}
+	<div class="grid grid-cols-2 gap-3 mx-4 mt-4">
+		<div class="stat bg-base-100 rounded-box shadow-sm p-3">
+			<div class="stat-title text-[11px]">Total Shifts</div>
+			<div class="stat-value text-lg">{totalShifts}</div>
+			<div class="stat-desc text-[11px]">{weekdayShifts} weekday · {weekendShifts} weekend</div>
+		</div>
+		<div class="stat bg-base-100 rounded-box shadow-sm p-3">
+			<div class="stat-title text-[11px]">Total Hours</div>
+			<div class="stat-value text-lg">{totalHours.toFixed(1)}</div>
+			<div class="stat-desc text-[11px]">{avgHours.toFixed(1)} hrs avg per shift</div>
+		</div>
+	</div>
+{/if}
 
 <TimesheetEntryModal bind:this={timesheetEntryModal} />
 <WeekViewModal bind:this={weekViewModal} />

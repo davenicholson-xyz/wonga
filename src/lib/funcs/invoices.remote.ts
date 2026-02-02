@@ -62,7 +62,8 @@ export const get_invoices = query(async () => {
 			items: invoice.items,
 			total: invoice.total,
 			customer_name: customer.name,
-			paid: invoice.paid
+			paid: invoice.paid,
+			emailed: invoice.emailed
 		})
 		.from(invoice)
 		.innerJoin(customer, eq(invoice.customer_id, customer.id))
