@@ -62,7 +62,7 @@
 	{/each}
 
 	<button
-		class="btn btn-ghost btn-sm w-full mt-2 opacity-50"
+		class="w-full mt-3 rounded-xl border border-dashed border-base-content/15 p-3 text-sm text-base-content/30 hover:border-base-content/30 hover:text-base-content/50 transition-colors"
 		onclick={() => newCategoryModal.show()}>+ Add Category</button
 	>
 </div>
