@@ -89,36 +89,48 @@
 		modals.weekView.show(days, week.number);
 	}
 
-	const currentWeek = getISOWeekNumber(new Date());
+	const today = new Date();
+	const todayStr = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
+	const currentWeek = getISOWeekNumber(today);
 
 	const modals = getTimeSheetModalControls();
 </script>
 
-<div class="grid grid-cols-[auto_repeat(7,1fr)] gap-x-1 gap-y-2 py-4 items-center">
+<div class="grid grid-cols-[2rem_repeat(7,1fr)] gap-x-1 gap-y-1 py-4">
 	<div></div>
-	{#each ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as label (label)}
-		<div class="text-center text-xs font-bold text-base-content/60 pb-1">{label}</div>
+	{#each ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as label, i (label)}
+		<div
+			class="text-center text-[10px] font-semibold uppercase tracking-wide pb-1 {i >= 5
+				? 'text-base-content/30'
+				: 'text-base-content/50'}"
+		>
+			{label}
+		</div>
 	{/each}
 
 	{#each weeks as week (week.number)}
 		<button
-			class="btn btn-ghost btn-xs text-xs w-8 {week.number === currentWeek
-				? 'btn-primary'
-				: 'text-base-content/40'}"
+			class="flex items-center justify-center h-11 text-[10px] font-semibold rounded transition-colors hover:bg-base-200 {week.number ===
+			currentWeek
+				? 'text-primary'
+				: 'text-base-content/25'}"
 			onclick={() => onWeekClick(week)}
 		>
 			{week.number}
 		</button>
-		{#each week.days as cell (cell)}
+		{#each week.days as cell, di (cell.date)}
+			{@const isToday = cell.date === todayStr}
 			<button
-				class="btn btn-ghost text-sm flex flex-col items-center justify-start pt-1.5 h-10 min-w-0"
-				class:opacity-20={!cell.current}
+				class="btn btn-ghost text-sm flex flex-col items-center justify-center gap-0.5 h-11 min-w-0 p-0 rounded-lg
+					{!cell.current ? 'opacity-20' : ''}
+					{isToday ? 'ring-1 ring-primary/40 bg-primary/5' : ''}
+					{di >= 5 && cell.current && !isToday ? 'bg-base-200/40' : ''}"
 				onclick={() => {
 					if (!cell.current) return;
 					modals.newEntry.show(cell.date, entryByDate.get(cell.date));
 				}}
 			>
-				{cell.day}
+				<span class="leading-none {isToday ? 'text-primary font-bold' : ''}">{cell.day}</span>
 				<span
 					class="w-1.5 h-1.5 shrink-0 rounded-full mt-0.5"
 					class:bg-warning={cell.entry?.start_time === '06:00'}
