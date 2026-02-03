@@ -22,6 +22,7 @@ export const get_invoice = query(v.number(), async (invoice_number) => {
 			paid: invoice.paid,
 			emailed: invoice.emailed,
 			timesheet_image: invoice.timesheet_image,
+			customer_id: invoice.customer_id,
 			customer_name: customer.name,
 			customer_email: customer.email,
 			customer_address: customer.address
@@ -146,6 +147,42 @@ export const send_invoice = command(v.number(), async (invoice_number) => {
 	await db.update(invoice).set({ emailed: 1 }).where(eq(invoice.id, inv.id));
 	get_invoice(invoice_number).refresh();
 });
+
+export const update_invoice = command(
+	v.object({
+		id: v.string(),
+		invoice_number: v.number(),
+		customer_id: v.string(),
+		invoice_date: v.string(),
+		due_date: v.string(),
+		items: v.string(),
+		total: v.number()
+	}),
+	async ({ id, invoice_number, customer_id, invoice_date, due_date, items, total }) => {
+		await db
+			.update(invoice)
+			.set({
+				customer_id,
+				invoice_date: new Date(invoice_date),
+				due_date: new Date(due_date),
+				items,
+				total
+			})
+			.where(eq(invoice.id, id));
+
+		get_invoice(invoice_number).refresh();
+		get_invoices().refresh();
+	}
+);
+
+export const delete_invoice = command(
+	v.object({ id: v.string(), invoice_number: v.number() }),
+	async ({ id, invoice_number }) => {
+		await db.delete(invoice).where(eq(invoice.id, id));
+		get_invoice(invoice_number).refresh();
+		get_invoices().refresh();
+	}
+);
 
 export const create_invoice = form(
 	v.object({

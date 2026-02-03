@@ -11,7 +11,20 @@
 	const tmonth = $derived(get_timesheet_for_month(`${year}-${month}-1`));
 	const entries = $derived(tmonth.current ?? []);
 	type Entry = (typeof entries)[number];
-	const entryByDate = $derived(new Map(entries.map((e) => [e.date, e])));
+
+	const prevMonth = $derived(month === 1 ? 12 : month - 1);
+	const prevYear = $derived(month === 1 ? year - 1 : year);
+	const nextMonth = $derived(month === 12 ? 1 : month + 1);
+	const nextYear = $derived(month === 12 ? year + 1 : year);
+
+	const tprev = $derived(get_timesheet_for_month(`${prevYear}-${prevMonth}-1`));
+	const tnext = $derived(get_timesheet_for_month(`${nextYear}-${nextMonth}-1`));
+	const prevEntries = $derived(tprev.current ?? []);
+	const nextEntries = $derived(tnext.current ?? []);
+
+	const entryByDate = $derived(
+		new Map([...entries, ...prevEntries, ...nextEntries].map((e) => [e.date, e]))
+	);
 
 	const days_in_month = $derived(new Date(year, month, 0).getDate());
 
@@ -27,7 +40,9 @@
 		const result: Cell[] = [];
 		// Previous month padding
 		for (let i = offset - 1; i >= 0; i--) {
-			result.push({ day: prev_month_days - i, current: false, date: '' });
+			const d = prev_month_days - i;
+			const date = `${prevYear}-${prevMonth}-${d}`;
+			result.push({ day: d, current: false, date, entry: entryByDate.get(date) });
 		}
 		// Current month
 		for (let d = 1; d <= days_in_month; d++) {
@@ -38,7 +53,8 @@
 		const remaining = 7 - (result.length % 7);
 		if (remaining < 7) {
 			for (let d = 1; d <= remaining; d++) {
-				result.push({ day: d, current: false, date: '' });
+				const date = `${nextYear}-${nextMonth}-${d}`;
+				result.push({ day: d, current: false, date, entry: entryByDate.get(date) });
 			}
 		}
 		return result;
@@ -65,12 +81,11 @@
 	}
 
 	function onWeekClick(week: Week) {
-		const days = week.days
-			.filter((c) => c.current)
-			.map((c) => {
-				const d = new Date(year, month - 1, c.day);
-				return { date: c.date, dayOfWeek: d.getDay(), entry: c.entry };
-			});
+		const days = week.days.map((c) => {
+			const [y, m, d] = c.date.split('-').map(Number);
+			const dt = new Date(y, m - 1, d);
+			return { date: c.date, dayOfWeek: dt.getDay(), entry: c.entry };
+		});
 		modals.weekView.show(days, week.number);
 	}
 

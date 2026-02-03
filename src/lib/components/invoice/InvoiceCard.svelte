@@ -70,7 +70,7 @@
 		<div class="flex items-center justify-between text-xs text-base-content/60">
 			<span>{invoice.customer_name}</span>
 			<span>
-				{new Date(invoice.invoice_date).toLocaleDateString('en-GB', {
+				{new Date(invoice.due_date).toLocaleDateString('en-GB', {
 					day: 'numeric',
 					month: 'short',
 					year: 'numeric'

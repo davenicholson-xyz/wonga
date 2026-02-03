@@ -1,4 +1,5 @@
 <script>
+	import { resolve } from '$app/paths';
 	import { get_payment_settings, save_payment_settings } from '$lib/funcs/settings.remote';
 	import { get_customers, update_customer, delete_customer } from '$lib/funcs/customers.remote';
 
@@ -90,6 +91,67 @@
 			deleteError = e?.message ?? 'Failed to delete customer';
 		}
 		deleting = false;
+	}
+
+	// Data import/export
+	let importing = $state(false);
+	let importError = $state('');
+	let importSuccess = $state(false);
+	let showImportConfirm = $state(false);
+	/** @type {HTMLInputElement} */
+	let fileInput;
+	/** @type {any} */
+	let pendingImportData = $state(null);
+
+	function handleFileSelect(e) {
+		const input = /** @type {HTMLInputElement} */ (e.target);
+		const file = input.files?.[0];
+		if (!file) return;
+
+		importError = '';
+		importSuccess = false;
+
+		const reader = new FileReader();
+		reader.onload = (evt) => {
+			try {
+				pendingImportData = JSON.parse(/** @type {string} */ (evt.target?.result));
+				if (!pendingImportData?.version || !pendingImportData?.exported_at) {
+					importError = 'Invalid backup file format.';
+					pendingImportData = null;
+				} else {
+					showImportConfirm = true;
+				}
+			} catch {
+				importError = 'Could not parse file. Make sure it is a valid Wonga backup.';
+			}
+			input.value = '';
+		};
+		reader.readAsText(file);
+	}
+
+	async function doImport() {
+		showImportConfirm = false;
+		importing = true;
+		importError = '';
+		importSuccess = false;
+		try {
+			const res = await fetch(resolve('/settings/import'), {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(pendingImportData)
+			});
+			const result = await res.json();
+			if (!res.ok) {
+				importError = result.error ?? 'Import failed';
+			} else {
+				importSuccess = true;
+				setTimeout(() => (importSuccess = false), 3000);
+			}
+		} catch (/** @type {any} */ e) {
+			importError = e?.message ?? 'Import failed';
+		}
+		importing = false;
+		pendingImportData = null;
 	}
 </script>
 
@@ -197,6 +259,77 @@
 			</div>
 		{/if}
 	</div>
+
+	<input type="radio" name="settings_tabs" class="tab" aria-label="Data" />
+	<div class="tab-content bg-base-200 border-base-300 p-4">
+		<div class="space-y-6">
+			<div>
+				<h3 class="font-semibold text-sm mb-2">Export</h3>
+				<p class="text-xs text-base-content/60 mb-3">
+					Download a backup of all your data including invoices, customers, timesheets, budget, and
+					settings.
+				</p>
+				<a href={resolve('/settings/export')} download class="btn btn-primary btn-sm">
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						viewBox="0 0 20 20"
+						fill="currentColor"
+						class="size-4"
+					>
+						<path
+							d="M10.75 2.75a.75.75 0 0 0-1.5 0v8.614L6.295 8.235a.75.75 0 1 0-1.09 1.03l4.25 4.5a.75.75 0 0 0 1.09 0l4.25-4.5a.75.75 0 0 0-1.09-1.03l-2.955 3.129V2.75Z"
+						/>
+						<path
+							d="M3.5 12.75a.75.75 0 0 0-1.5 0v2.5A2.75 2.75 0 0 0 4.75 18h10.5A2.75 2.75 0 0 0 18 15.25v-2.5a.75.75 0 0 0-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5Z"
+						/>
+					</svg>
+					Download Backup
+				</a>
+			</div>
+
+			<div class="divider my-0"></div>
+
+			<div>
+				<h3 class="font-semibold text-sm mb-2">Import</h3>
+				<p class="text-xs text-base-content/60 mb-3">
+					Restore from a backup file. This will replace all existing data.
+				</p>
+				<button
+					class="btn btn-sm btn-outline"
+					onclick={() => fileInput.click()}
+					disabled={importing}
+				>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						viewBox="0 0 20 20"
+						fill="currentColor"
+						class="size-4"
+					>
+						<path
+							d="M9.25 13.25a.75.75 0 0 0 1.5 0V4.636l2.955 3.129a.75.75 0 0 0 1.09-1.03l-4.25-4.5a.75.75 0 0 0-1.09 0l-4.25 4.5a.75.75 0 1 0 1.09 1.03L9.25 4.636v8.614Z"
+						/>
+						<path
+							d="M3.5 12.75a.75.75 0 0 0-1.5 0v2.5A2.75 2.75 0 0 0 4.75 18h10.5A2.75 2.75 0 0 0 18 15.25v-2.5a.75.75 0 0 0-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5Z"
+						/>
+					</svg>
+					{importing ? 'Importing...' : 'Upload Backup'}
+				</button>
+				<input
+					bind:this={fileInput}
+					type="file"
+					accept=".json"
+					class="hidden"
+					onchange={handleFileSelect}
+				/>
+				{#if importError}
+					<div class="alert alert-error mt-3 text-sm">{importError}</div>
+				{/if}
+				{#if importSuccess}
+					<div class="alert alert-success mt-3 text-sm">Data restored successfully.</div>
+				{/if}
+			</div>
+		</div>
+	</div>
 </div>
 
 <!-- Edit Customer Modal -->
@@ -247,6 +380,44 @@
 	</div>
 	<form method="dialog" class="modal-backdrop">
 		<button>close</button>
+	</form>
+</dialog>
+
+<!-- Import Confirmation Modal -->
+<dialog class="modal" class:modal-open={showImportConfirm}>
+	<div class="modal-box">
+		<h3 class="font-bold text-lg">Restore Data</h3>
+		<p class="py-4 text-sm text-base-content/70">
+			This will <strong>replace all existing data</strong> with the backup from
+			{#if pendingImportData}
+				<strong
+					>{new Date(pendingImportData.exported_at).toLocaleDateString('en-GB', {
+						day: 'numeric',
+						month: 'long',
+						year: 'numeric'
+					})}</strong
+				>.
+			{/if}
+			This cannot be undone.
+		</p>
+		<div class="modal-action">
+			<button
+				class="btn btn-ghost btn-sm"
+				onclick={() => {
+					showImportConfirm = false;
+					pendingImportData = null;
+				}}>Cancel</button
+			>
+			<button class="btn btn-error btn-sm" onclick={doImport}>Restore</button>
+		</div>
+	</div>
+	<form method="dialog" class="modal-backdrop">
+		<button
+			onclick={() => {
+				showImportConfirm = false;
+				pendingImportData = null;
+			}}>close</button
+		>
 	</form>
 </dialog>
 

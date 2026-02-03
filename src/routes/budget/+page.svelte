@@ -12,10 +12,10 @@
 	import { setBudgetModalControls } from '$lib/context/budget.svelte';
 
 	const now = new Date();
-	const next_month = now.getMonth() + 2 > 12 ? 1 : now.getMonth() + 2;
-	const next_month_year = now.getMonth() + 2 > 12 ? now.getFullYear() + 1 : now.getFullYear();
+	const current_month = now.getMonth() + 1;
+	const current_year = now.getFullYear();
 
-	const income_data = get_income_for({ month: next_month, year: next_month_year });
+	const income_data = get_income_for({ month: current_month, year: current_year });
 
 	const net = $derived(income_data.current?.net ?? 0);
 
