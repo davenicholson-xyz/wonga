@@ -31,10 +31,11 @@ export const get_categories_with_expenses = query(async () => {
 
 export const create_category = form(
 	v.object({
-		name: v.string()
+		name: v.string(),
+		emoji: v.optional(v.string())
 	}),
-	async ({ name }) => {
-		await db.insert(category).values({ name });
+	async ({ name, emoji }) => {
+		await db.insert(category).values({ name, emoji: emoji || null });
 		get_categories_with_expenses().refresh();
 	}
 );
@@ -42,10 +43,14 @@ export const create_category = form(
 export const update_category = form(
 	v.object({
 		id: v.string(),
-		name: v.string()
+		name: v.string(),
+		emoji: v.optional(v.string())
 	}),
-	async ({ id, name }) => {
-		await db.update(category).set({ name }).where(eq(category.id, id));
+	async ({ id, name, emoji }) => {
+		await db
+			.update(category)
+			.set({ name, emoji: emoji || null })
+			.where(eq(category.id, id));
 		get_categories_with_expenses().refresh();
 	}
 );

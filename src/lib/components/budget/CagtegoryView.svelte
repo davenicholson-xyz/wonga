@@ -13,9 +13,14 @@
 			<button
 				class="font-bold text-sm hover:underline text-left"
 				onclick={() =>
-					modals.editCategory.show(category.id, category.name, category.expenses.length > 0)}
+					modals.editCategory.show(
+						category.id,
+						category.name,
+						category.emoji,
+						category.expenses.length > 0
+					)}
 			>
-				{category.name}
+				{#if category.emoji}<span class="mr-1">{category.emoji}</span>{/if}{category.name}
 			</button>
 			<span class="text-sm font-bold">{formatCurrency(category.total)}</span>
 		</div>

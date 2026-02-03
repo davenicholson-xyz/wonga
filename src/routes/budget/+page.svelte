@@ -32,8 +32,8 @@
 	setBudgetModalControls({
 		newCategory: { show: () => newCategoryModal.show() },
 		editCategory: {
-			show: (id: string, name: string, expenses: boolean) =>
-				editCategoryModal.show(id, name, expenses)
+			show: (id: string, name: string, emoji: string | null, expenses: boolean) =>
+				editCategoryModal.show(id, name, emoji, expenses)
 		},
 		newExpense: { show: (category_id: string) => newExpenseModal.show(category_id) },
 		editExpense: {

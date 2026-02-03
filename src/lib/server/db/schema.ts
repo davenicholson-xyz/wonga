@@ -45,7 +45,8 @@ export const category = sqliteTable('category', {
 	id: text('id')
 		.primaryKey()
 		.$defaultFn(() => crypto.randomUUID()),
-	name: text('name').notNull()
+	name: text('name').notNull(),
+	emoji: text('emoji')
 });
 
 export const expense = sqliteTable('expense', {

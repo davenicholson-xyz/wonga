@@ -5,11 +5,18 @@
 
 	let id = $state('');
 	let name = $state('');
+	let selectedEmoji = $state('');
 	let expenses = $state(false);
 
-	export function show(category_id: string, category_name: string, category_expenses: boolean) {
+	export function show(
+		category_id: string,
+		category_name: string,
+		category_emoji: string | null,
+		category_expenses: boolean
+	) {
 		id = category_id;
 		name = category_name;
+		selectedEmoji = category_emoji ?? '';
 		expenses = category_expenses;
 		showModal = true;
 	}
@@ -20,16 +27,26 @@
 		<h3 class="font-bold text-lg">Edit Category</h3>
 		<form {...update_category} onsubmit={() => (showModal = false)}>
 			<input {...update_category.fields.id.as('text')} type="hidden" bind:value={id} />
+			<input {...update_category.fields.emoji.as('text')} type="hidden" value={selectedEmoji} />
 			<div class="form-control mt-4">
 				<label class="label" for="category-name">
 					<span class="label-text">Name</span>
 				</label>
-				<input
-					{...update_category.fields.name.as('text')}
-					bind:value={name}
-					class="input input-bordered input-sm"
-					id="category-name"
-				/>
+				<div class="flex gap-2">
+					<input
+						type="text"
+						class="input input-bordered input-sm w-12 text-center text-lg p-0"
+						placeholder="😀"
+						bind:value={selectedEmoji}
+						maxlength="2"
+					/>
+					<input
+						{...update_category.fields.name.as('text')}
+						bind:value={name}
+						class="input input-bordered input-sm flex-1"
+						id="category-name"
+					/>
+				</div>
 			</div>
 			<div class="modal-action justify-between">
 				<div class="flex gap-2">
