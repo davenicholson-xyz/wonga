@@ -1,5 +1,13 @@
 import { db } from '$lib/server/db';
-import { customer, invoice, income, settings, category, expense, timesheet } from '$lib/server/db/schema';
+import {
+	customer,
+	invoice,
+	income,
+	settings,
+	category,
+	expense,
+	timesheet
+} from '$lib/server/db/schema';
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
@@ -25,10 +33,21 @@ export const POST: RequestHandler = async ({ request }) => {
 			await db.insert(customer).values(data.customers);
 		}
 		if (data.invoices?.length) {
-			await db.insert(invoice).values(data.invoices);
+			await db.insert(invoice).values(
+				data.invoices.map((inv: any) => ({
+					...inv,
+					invoice_date: new Date(inv.invoice_date),
+					due_date: new Date(inv.due_date)
+				}))
+			);
 		}
 		if (data.income?.length) {
-			await db.insert(income).values(data.income);
+			await db.insert(income).values(
+				data.income.map((inc: any) => ({
+					...inc,
+					due_date: new Date(inc.due_date)
+				}))
+			);
 		}
 		if (data.settings?.length) {
 			await db.insert(settings).values(data.settings);
