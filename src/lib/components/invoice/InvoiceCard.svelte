@@ -3,79 +3,101 @@
 	import { formatCurrency } from '$lib/helpers';
 
 	let { invoice } = $props();
+
+	const isPaid = $derived(invoice.paid);
+	const isOverdue = $derived(!invoice.paid && new Date(invoice.due_date) < new Date());
 </script>
 
 <a
 	href={resolve(`/invoices/${invoice.invoice_number}`)}
-	class="card bg-base-100 shadow-sm border border-base-100 hover:shadow-md transition-shadow"
+	class="block rounded-xl border p-3 transition-all hover:shadow-md
+		{isPaid
+		? 'bg-gradient-to-br from-success/5 to-transparent border-success/20'
+		: isOverdue
+			? 'bg-gradient-to-br from-error/5 to-transparent border-error/20'
+			: 'bg-base-100 border-base-content/10'}"
 >
-	<div class="card-body px-3 py-2 gap-0">
-		<div class="flex items-center justify-between">
-			<span class="font-mono text-xs inline-flex items-center gap-1">
-				INV-{invoice.invoice_number}
-			</span>
-
-			<span class="pl-3 flex flex-1">
-				{#if invoice.paid}
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						viewBox="0 0 20 20"
-						fill="currentColor"
-						class="size-3 text-success"
-						title="Paid"
-					>
-						<path
-							d="M10.75 10.818v2.614A3.13 3.13 0 0 0 11.888 13c.482-.315.612-.648.612-.875 0-.227-.13-.56-.612-.875a3.13 3.13 0 0 0-1.138-.432ZM8.33 8.62c.053.055.115.11.184.164.208.16.46.284.736.363V6.603c-.481.085-.876.298-1.124.549-.26.265-.356.544-.356.787 0 .243.096.522.356.787l.204-.106Z"
-						/>
-						<path
-							fill-rule="evenodd"
-							d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-8-6a.75.75 0 0 1 .75.75v.316a3.78 3.78 0 0 1 1.653.713c.426.33.744.74.925 1.2a.75.75 0 0 1-1.395.55 1.35 1.35 0 0 0-.447-.563 2.19 2.19 0 0 0-.736-.363V9.3c.514.093 1.01.265 1.459.525.69.399 1.291 1.02 1.291 1.925s-.601 1.526-1.291 1.925a4.63 4.63 0 0 1-1.459.525v.316a.75.75 0 0 1-1.5 0v-.316a3.78 3.78 0 0 1-1.653-.713 2.72 2.72 0 0 1-.925-1.2.75.75 0 0 1 1.395-.55c.12.302.294.508.447.563.217.12.465.209.736.363V10.7a4.63 4.63 0 0 1-1.459-.525C6.601 9.776 6 9.156 6 8.25s.601-1.526 1.291-1.925A4.63 4.63 0 0 1 8.75 5.8v-.316A.75.75 0 0 1 9.5 4.734L10 4Z"
-							clip-rule="evenodd"
-						/>
-					</svg>
-				{:else if new Date(invoice.due_date) < new Date()}
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						viewBox="0 0 20 20"
-						fill="currentColor"
-						class="size-3 text-error"
-						title="Overdue"
-					>
-						<path
-							fill-rule="evenodd"
-							d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-8-5a.75.75 0 0 1 .75.75v4.5a.75.75 0 0 1-1.5 0v-4.5A.75.75 0 0 1 10 5Zm0 10a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"
-							clip-rule="evenodd"
-						/>
-					</svg>
-				{/if}
-				{#if invoice.emailed}
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						viewBox="0 0 20 20"
-						fill="currentColor"
-						class="size-3 text-warning"
-						title="Emailed"
-					>
-						<path
-							d="M3 4a2 2 0 0 0-2 2v1.161l8.441 4.221a1.25 1.25 0 0 0 1.118 0L19 7.162V6a2 2 0 0 0-2-2H3Z"
-						/>
-						<path
-							d="m19 8.839-7.77 3.885a2.75 2.75 0 0 1-2.46 0L1 8.839V14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8.839Z"
-						/>
-					</svg>
-				{/if}
-			</span>
-			<span class="text-xs font-semibold">{formatCurrency(invoice.total)}</span>
+	<div class="flex items-center gap-2.5">
+		<!-- Status icon -->
+		<div
+			class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0
+				{isPaid ? 'bg-success/15' : isOverdue ? 'bg-error/15' : 'bg-base-content/5'}"
+		>
+			{#if isPaid}
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					viewBox="0 0 20 20"
+					fill="currentColor"
+					class="w-4 h-4 text-success"
+				>
+					<path
+						fill-rule="evenodd"
+						d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z"
+						clip-rule="evenodd"
+					/>
+				</svg>
+			{:else if isOverdue}
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					viewBox="0 0 20 20"
+					fill="currentColor"
+					class="w-4 h-4 text-error"
+				>
+					<path
+						fill-rule="evenodd"
+						d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-8-5a.75.75 0 0 1 .75.75v4.5a.75.75 0 0 1-1.5 0v-4.5A.75.75 0 0 1 10 5Zm0 10a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"
+						clip-rule="evenodd"
+					/>
+				</svg>
+			{:else}
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					viewBox="0 0 20 20"
+					fill="currentColor"
+					class="w-4 h-4 text-base-content/30"
+				>
+					<path
+						d="M5.25 12a.75.75 0 0 1 .75-.75h.01a.75.75 0 0 1 .75.75v.01a.75.75 0 0 1-.75.75H6a.75.75 0 0 1-.75-.75V12ZM6 13.25a.75.75 0 0 0-.75.75v.01c0 .414.336.75.75.75h.01a.75.75 0 0 0 .75-.75V14a.75.75 0 0 0-.75-.75H6ZM7.25 12a.75.75 0 0 1 .75-.75h.01a.75.75 0 0 1 .75.75v.01a.75.75 0 0 1-.75.75H8a.75.75 0 0 1-.75-.75V12ZM8 13.25a.75.75 0 0 0-.75.75v.01c0 .414.336.75.75.75h.01a.75.75 0 0 0 .75-.75V14a.75.75 0 0 0-.75-.75H8ZM9.25 10a.75.75 0 0 1 .75-.75h.01a.75.75 0 0 1 .75.75v.01a.75.75 0 0 1-.75.75H10a.75.75 0 0 1-.75-.75V10ZM10 11.25a.75.75 0 0 0-.75.75v.01c0 .414.336.75.75.75h.01a.75.75 0 0 0 .75-.75V12a.75.75 0 0 0-.75-.75H10ZM9.25 14a.75.75 0 0 1 .75-.75h.01a.75.75 0 0 1 .75.75v.01a.75.75 0 0 1-.75.75H10a.75.75 0 0 1-.75-.75V14ZM12 9.25a.75.75 0 0 0-.75.75v.01c0 .414.336.75.75.75h.01a.75.75 0 0 0 .75-.75V10a.75.75 0 0 0-.75-.75H12ZM11.25 12a.75.75 0 0 1 .75-.75h.01a.75.75 0 0 1 .75.75v.01a.75.75 0 0 1-.75.75H12a.75.75 0 0 1-.75-.75V12ZM12 13.25a.75.75 0 0 0-.75.75v.01c0 .414.336.75.75.75h.01a.75.75 0 0 0 .75-.75V14a.75.75 0 0 0-.75-.75H12ZM13.25 10a.75.75 0 0 1 .75-.75h.01a.75.75 0 0 1 .75.75v.01a.75.75 0 0 1-.75.75H14a.75.75 0 0 1-.75-.75V10ZM14 11.25a.75.75 0 0 0-.75.75v.01c0 .414.336.75.75.75h.01a.75.75 0 0 0 .75-.75V12a.75.75 0 0 0-.75-.75H14ZM5.25 10a.75.75 0 0 1 .75-.75h.01a.75.75 0 0 1 .75.75v.01a.75.75 0 0 1-.75.75H6a.75.75 0 0 1-.75-.75V10ZM7.25 10a.75.75 0 0 1 .75-.75h.01a.75.75 0 0 1 .75.75v.01a.75.75 0 0 1-.75.75H8a.75.75 0 0 1-.75-.75V10ZM2 3.5A1.5 1.5 0 0 1 3.5 2h13A1.5 1.5 0 0 1 18 3.5v1.125a.75.75 0 0 1-.218.53l-1.282 1.28V18a.75.75 0 0 1-.75.75h-5a.75.75 0 0 1-.75-.75v-4h-2v4a.75.75 0 0 1-.75.75h-5a.75.75 0 0 1-.75-.75V6.436L.468 5.156A.75.75 0 0 1 .25 4.625V3.5Z"
+					/>
+				</svg>
+			{/if}
 		</div>
-		<div class="flex items-center justify-between text-xs text-base-content/60">
-			<span>{invoice.customer_name}</span>
-			<span>
-				{new Date(invoice.due_date).toLocaleDateString('en-GB', {
-					day: 'numeric',
-					month: 'short',
-					year: 'numeric'
-				})}
-			</span>
+
+		<!-- Content -->
+		<div class="flex-1 min-w-0">
+			<div class="flex items-center justify-between">
+				<span class="font-mono text-xs font-semibold">INV-{invoice.invoice_number}</span>
+				<span class="text-sm font-bold {isPaid ? 'text-success' : isOverdue ? 'text-error' : ''}"
+					>{formatCurrency(invoice.total)}</span
+				>
+			</div>
+			<div class="flex items-center justify-between mt-0.5">
+				<span class="text-[11px] text-base-content/50 truncate mr-2">{invoice.customer_name}</span>
+				<div class="flex items-center gap-1.5 shrink-0">
+					{#if invoice.emailed}
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							viewBox="0 0 20 20"
+							fill="currentColor"
+							class="w-3 h-3 text-warning"
+							title="Emailed"
+						>
+							<path
+								d="M3 4a2 2 0 0 0-2 2v1.161l8.441 4.221a1.25 1.25 0 0 0 1.118 0L19 7.162V6a2 2 0 0 0-2-2H3Z"
+							/>
+							<path
+								d="m19 8.839-7.77 3.885a2.75 2.75 0 0 1-2.46 0L1 8.839V14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8.839Z"
+							/>
+						</svg>
+					{/if}
+					<span class="text-[11px] text-base-content/40">
+						{new Date(invoice.due_date).toLocaleDateString('en-GB', {
+							day: 'numeric',
+							month: 'short'
+						})}
+					</span>
+				</div>
+			</div>
 		</div>
 	</div>
 </a>
