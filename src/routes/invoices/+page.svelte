@@ -101,16 +101,21 @@
 		</h3>
 		<div class="form-control">
 			<label class="label" for="tax-input">
-				<span class="label-text">Tax Percentage</span>
+				<span class="label-text">Tax Percentage: {modal_tax}%</span>
 			</label>
 			<input
 				id="tax-input"
-				type="number"
-				class="input input-bordered input-sm w-full"
+				type="range"
+				class="range range-sm"
 				min="0"
-				max="100"
+				max="50"
 				bind:value={modal_tax}
 			/>
+			<div class="flex justify-between text-xs opacity-60 px-1 mt-1">
+				<span>0%</span>
+				<span>25%</span>
+				<span>50%</span>
+			</div>
 		</div>
 		<div class="modal-action">
 			<button class="btn btn-sm" onclick={() => (modal_open = false)}>Cancel</button>
