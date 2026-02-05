@@ -52,68 +52,36 @@ export async function generateInvoicePdf(
 	const grey = '#6b7280';
 	const dark = '#111827';
 	const light = '#9ca3af';
-	const accent = '#4f46e5';
 
-	doc.fontSize(18).fillColor(accent).text('INVOICE', 50, 50);
-
-	doc.fontSize(10).fillColor(dark).text(`INV-${inv.invoice_number}`, 50, 85);
+	// -- Invoice number --
+	doc.fontSize(20).fillColor(dark).text(`INV-${inv.invoice_number}`, 50, 50);
 
 	if (inv.paid) {
-		doc.fontSize(10).fillColor('#16a34a').text('PAID', 150, 85);
+		doc.fontSize(10).fillColor('#16a34a').text('PAID', 50, 75);
 	}
 
-	// -- Sender details (FROM) --
-	const fromY = 110;
-	let fromLineY = fromY + 12;
+	// -- Sender details (left) and Bill To (right) on the same line --
+	const rightX = 350;
+	const detailsY = 100;
 
+	// Sender (left column)
+	let leftY = detailsY;
 	if (payment?.payto) {
-		doc.fontSize(10).fillColor(dark).text(payment.payto, 50, fromLineY);
-		fromLineY += 14;
+		doc.fontSize(10).fillColor(dark).text(payment.payto, 50, leftY);
+		leftY += 14;
 	}
 	if (payment?.address) {
 		for (const line of payment.address.split('\n')) {
-			doc.fontSize(9).fillColor(grey).text(line, 50, fromLineY);
-			fromLineY += 13;
+			doc.fontSize(9).fillColor(grey).text(line, 50, leftY);
+			leftY += 13;
 		}
 	}
 	if (payment?.email) {
-		doc.fontSize(9).fillColor(grey).text(payment.email, 50, fromLineY);
+		doc.fontSize(9).fillColor(grey).text(payment.email, 50, leftY);
+		leftY += 13;
 	}
 
-	const detailsY = 200;
-
-	doc.fontSize(8).fillColor(light).text('INVOICE DATE', 50, detailsY);
-	doc
-		.fontSize(10)
-		.fillColor(dark)
-		.text(
-			new Date(inv.invoice_date).toLocaleDateString('en-GB', {
-				day: 'numeric',
-				month: 'long',
-				year: 'numeric'
-			}),
-			50,
-			detailsY + 12
-		);
-
-	doc
-		.fontSize(8)
-		.fillColor(light)
-		.text('DUE DATE', 50, detailsY + 35);
-	doc
-		.fontSize(10)
-		.fillColor(dark)
-		.text(
-			new Date(inv.due_date).toLocaleDateString('en-GB', {
-				day: 'numeric',
-				month: 'long',
-				year: 'numeric'
-			}),
-			50,
-			detailsY + 47
-		);
-
-	const rightX = 350;
+	// Bill To (right column, same starting Y)
 	doc.fontSize(8).fillColor(light).text('BILL TO', rightX, detailsY);
 	doc
 		.fontSize(10)
@@ -131,7 +99,38 @@ export async function generateInvoicePdf(
 		doc.fontSize(9).fillColor(grey).text(inv.customer_email, rightX, billY);
 	}
 
-	const tableTop = 320;
+	// -- Dates row below both columns --
+	const datesY = Math.max(leftY, billY) + 20;
+
+	doc.fontSize(8).fillColor(light).text('INVOICE DATE', 50, datesY);
+	doc
+		.fontSize(10)
+		.fillColor(dark)
+		.text(
+			new Date(inv.invoice_date).toLocaleDateString('en-GB', {
+				day: 'numeric',
+				month: 'long',
+				year: 'numeric'
+			}),
+			50,
+			datesY + 12
+		);
+
+	doc.fontSize(8).fillColor(light).text('DUE DATE', rightX, datesY);
+	doc
+		.fontSize(10)
+		.fillColor(dark)
+		.text(
+			new Date(inv.due_date).toLocaleDateString('en-GB', {
+				day: 'numeric',
+				month: 'long',
+				year: 'numeric'
+			}),
+			rightX,
+			datesY + 12
+		);
+
+	const tableTop = datesY + 50;
 	const col1 = 50;
 	const col2 = 310;
 	const col3 = 390;
