@@ -41,6 +41,25 @@ export const get_payment_settings = query(async () => {
 	};
 });
 
+export const get_rate_settings = query(async () => {
+	const row = await db.select().from(settings).where(eq(settings.key, 'hourly_rate')).execute();
+	return {
+		hourly_rate: row[0] ? parseFloat(row[0].value) : 30
+	};
+});
+
+export const save_rate_settings = command(
+	v.object({
+		hourly_rate: v.number()
+	}),
+	async ({ hourly_rate }) => {
+		await db
+			.insert(settings)
+			.values({ key: 'hourly_rate', value: hourly_rate.toString() })
+			.onConflictDoUpdate({ target: settings.key, set: { value: hourly_rate.toString() } });
+	}
+);
+
 export const save_payment_settings = command(
 	v.object({
 		payment_name: v.string(),

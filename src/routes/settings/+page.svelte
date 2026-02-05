@@ -1,6 +1,11 @@
 <script>
 	import { resolve } from '$app/paths';
-	import { get_payment_settings, save_payment_settings } from '$lib/funcs/settings.remote';
+	import {
+		get_payment_settings,
+		save_payment_settings,
+		get_rate_settings,
+		save_rate_settings
+	} from '$lib/funcs/settings.remote';
 	import { get_customers, update_customer, delete_customer } from '$lib/funcs/customers.remote';
 
 	const data = get_payment_settings();
@@ -32,6 +37,30 @@
 		saving = false;
 		saved = true;
 		setTimeout(() => (saved = false), 2000);
+	}
+
+	// Rates
+	const rateData = get_rate_settings();
+	const rateSettings = $derived(rateData.current);
+
+	let hourly_rate = $state(30);
+	let rateSaving = $state(false);
+	let rateSaved = $state(false);
+
+	$effect(() => {
+		if (rateSettings) {
+			hourly_rate = rateSettings.hourly_rate;
+		}
+	});
+
+	async function saveRate() {
+		rateSaving = true;
+		rateSaved = false;
+		await save_rate_settings({ hourly_rate });
+		rateData.refresh();
+		rateSaving = false;
+		rateSaved = true;
+		setTimeout(() => (rateSaved = false), 2000);
 	}
 
 	// Customers
@@ -230,6 +259,37 @@
 				{saving ? 'Saving...' : 'Save'}
 			</button>
 			{#if saved}
+				<span class="text-sm text-success">Saved</span>
+			{/if}
+		</div>
+	</div>
+
+	<input type="radio" name="settings_tabs" class="tab" aria-label="Rates" />
+	<div class="tab-content bg-base-200 border-base-300 p-4">
+		<div class="form-control">
+			<label class="label" for="hourly-rate">
+				<span class="label-text">Hourly Rate</span>
+			</label>
+			<label class="input input-bordered input-sm flex items-center gap-1 w-full">
+				<span class="text-base-content/60">£</span>
+				<input
+					id="hourly-rate"
+					type="number"
+					class="grow bg-transparent w-full"
+					placeholder="e.g. 30"
+					bind:value={hourly_rate}
+				/>
+			</label>
+			<p class="text-xs text-base-content/40 mt-1">
+				Used for timesheet earnings and invoice prices
+			</p>
+		</div>
+
+		<div class="mt-4 flex items-center gap-2">
+			<button class="btn btn-primary btn-sm" onclick={saveRate} disabled={rateSaving}>
+				{rateSaving ? 'Saving...' : 'Save'}
+			</button>
+			{#if rateSaved}
 				<span class="text-sm text-success">Saved</span>
 			{/if}
 		</div>

@@ -3,11 +3,13 @@
 	let {
 		value = $bindable(''),
 		total = $bindable(0),
-		initialItems
+		initialItems,
+		defaultPrice = 30
 	}: {
 		value?: string;
 		total?: number;
 		initialItems?: { name: string; description: string; quantity: number }[];
+		defaultPrice?: number;
 	} = $props();
 
 	type InvoiceItem = {
@@ -39,7 +41,7 @@
 		total = total + itemPrice * itemQuantity;
 		itemName = '';
 		itemDescription = '';
-		itemPrice = 30;
+		itemPrice = defaultPrice;
 		itemQuantity = 1;
 		closeNewItemModal();
 	}
@@ -84,6 +86,12 @@
 	let itemName = $state('');
 	let itemDescription = $state('');
 	let itemPrice = $state(30);
+
+	$effect(() => {
+		if (defaultPrice && !seeded) {
+			itemPrice = defaultPrice;
+		}
+	});
 	let itemQuantity = $state(1);
 
 	let showEditModal = $state(false);

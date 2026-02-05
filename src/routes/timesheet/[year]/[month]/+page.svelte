@@ -7,10 +7,12 @@
 	import { resolve } from '$app/paths';
 	import WeekViewModal from '$lib/components/timesheet/WeekViewModal.svelte';
 	import { get_timesheet_for_month } from '$lib/funcs/timesheet.remote';
+	import { get_rate_settings } from '$lib/funcs/settings.remote';
 	import { formatCurrency } from '$lib/helpers';
 	import { goto } from '$app/navigation';
 
-	const HOURLY_RATE = 30;
+	const rateData = get_rate_settings();
+	const hourlyRate = $derived(rateData.current?.hourly_rate ?? 30);
 
 	const year = $derived(page.params.year) as string;
 	const month = $derived(page.params.month) as string;
@@ -125,7 +127,7 @@
 		}).length
 	);
 	const weekendShifts = $derived(totalShifts - weekdayShifts);
-	const grossEarnings = $derived(totalHours * HOURLY_RATE);
+	const grossEarnings = $derived(totalHours * hourlyRate);
 	let showEarnings = $state(false);
 
 	const month_name = $derived(
@@ -301,7 +303,7 @@
 		</div>
 		{#if showEarnings}
 			<div class="text-2xl font-bold text-success">{formatCurrency(grossEarnings)}</div>
-			<div class="text-[11px] text-base-content/40 mt-0.5">@ £{HOURLY_RATE}/hr</div>
+			<div class="text-[11px] text-base-content/40 mt-0.5">@ £{hourlyRate}/hr</div>
 		{:else}
 			<div class="text-2xl font-bold text-base-content/20">* * * *</div>
 			<div class="text-[11px] text-base-content/40 mt-0.5">Tap to reveal</div>

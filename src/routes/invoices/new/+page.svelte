@@ -6,6 +6,10 @@
 	import DateSelect from '$lib/components/invoice/DateSelect.svelte';
 	import InvoiceItems from '$lib/components/invoice/InvoiceItems.svelte';
 	import InvoiceNumber from '$lib/components/invoice/InvoiceNumber.svelte';
+	import { get_rate_settings } from '$lib/funcs/settings.remote';
+
+	const rateData = get_rate_settings();
+	const defaultPrice = $derived(rateData.current?.hourly_rate ?? 30);
 
 	let invoiceNumber = $state<number>(0);
 	let selectedCustomer = $state<string>('');
@@ -72,7 +76,7 @@
 			>
 		</div>
 		<div class="p-4">
-			<InvoiceItems bind:value={items} bind:total={itemsTotal} {initialItems} />
+			<InvoiceItems bind:value={items} bind:total={itemsTotal} {initialItems} {defaultPrice} />
 		</div>
 	</div>
 </div>
