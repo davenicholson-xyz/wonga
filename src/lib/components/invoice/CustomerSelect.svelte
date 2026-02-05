@@ -56,10 +56,12 @@
 </div>
 
 <dialog bind:this={newCustomerModal} class="modal">
-	<div class="modal-box">
-		<h3 class="font-bold text-lg">New Customer</h3>
-		<form {...create_customer}>
-			<div class="form-control mt-4">
+	<div class="modal-box p-0 overflow-hidden">
+		<div class="bg-gradient-to-br from-info/15 to-info/5 px-5 py-4">
+			<h3 class="font-bold text-lg">New Customer</h3>
+		</div>
+		<form {...create_customer} class="px-5 py-4">
+			<div class="form-control">
 				<label class="label" for="customerName">
 					<span class="label-text">Name</span>
 				</label>
@@ -89,7 +91,7 @@
 					class="input input-bordered input-sm"
 				/>
 			</div>
-			<div class="modal-action">
+			<div class="flex justify-end gap-2 mt-5">
 				<button type="button" class="btn btn-ghost btn-sm" onclick={closeNewCustomerModal}
 					>Cancel</button
 				>

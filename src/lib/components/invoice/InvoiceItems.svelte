@@ -143,15 +143,18 @@
 >
 
 <dialog bind:this={newItemModal} class="modal">
-	<div class="modal-box">
-		<h3 class="font-bold text-lg">Add Item</h3>
+	<div class="modal-box p-0 overflow-hidden">
+		<div class="bg-gradient-to-br from-info/15 to-info/5 px-5 py-4">
+			<h3 class="font-bold text-lg">Add Item</h3>
+		</div>
 		<form
+			class="px-5 py-4"
 			onsubmit={(e) => {
 				e.preventDefault();
 				addItem();
 			}}
 		>
-			<div class="form-control mt-4">
+			<div class="form-control">
 				<label class="label" for="itemName">
 					<span class="label-text">Name</span>
 				</label>
@@ -200,7 +203,7 @@
 					/>
 				</div>
 			</div>
-			<div class="modal-action">
+			<div class="flex justify-end gap-2 mt-5">
 				<button type="button" class="btn btn-ghost btn-sm" onclick={closeNewItemModal}
 					>Cancel</button
 				>
@@ -214,15 +217,18 @@
 </dialog>
 
 <dialog class="modal" class:modal-open={showEditModal}>
-	<div class="modal-box">
-		<h3 class="font-bold text-lg">Edit Item</h3>
+	<div class="modal-box p-0 overflow-hidden">
+		<div class="bg-gradient-to-br from-primary/15 to-primary/5 px-5 py-4">
+			<h3 class="font-bold text-lg">Edit Item</h3>
+		</div>
 		<form
+			class="px-5 py-4"
 			onsubmit={(e) => {
 				e.preventDefault();
 				saveItem();
 			}}
 		>
-			<div class="form-control mt-4">
+			<div class="form-control">
 				<label class="label" for="editName">
 					<span class="label-text">Name</span>
 				</label>
@@ -271,7 +277,7 @@
 					/>
 				</div>
 			</div>
-			<div class="modal-action justify-between">
+			<div class="flex justify-between mt-5">
 				<button
 					type="button"
 					class="btn btn-error btn-sm"

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { resolve } from '$app/paths';
 	import { create_invoice } from '$lib/funcs/invoices.remote';
 	import CustomerSelect from '$lib/components/invoice/CustomerSelect.svelte';
 	import DateSelect from '$lib/components/invoice/DateSelect.svelte';
@@ -24,26 +25,54 @@
 	});
 </script>
 
-<div class="mx-2 mt-2">
-	<div class="card">
-		<div class="card-body p-4">
-			<h2 class="card-title text-lg mb-2">New Invoice</h2>
-
-			<div class="form-control">
-				<InvoiceNumber bind:value={invoiceNumber} />
+<div class="max-w-3xl mx-auto space-y-3 mb-24">
+	<!-- Header -->
+	<div
+		class="rounded-xl p-4 bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20"
+	>
+		<div class="flex items-center gap-3">
+			<a href={resolve('/invoices')} class="btn btn-ghost btn-sm btn-square">
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					viewBox="0 0 20 20"
+					fill="currentColor"
+					class="w-5 h-5"
+				>
+					<path
+						fill-rule="evenodd"
+						d="M17 10a.75.75 0 0 1-.75.75H5.612l4.158 3.96a.75.75 0 1 1-1.04 1.08l-5.5-5.25a.75.75 0 0 1 0-1.08l5.5-5.25a.75.75 0 1 1 1.04 1.08L5.612 9.25H16.25A.75.75 0 0 1 17 10Z"
+						clip-rule="evenodd"
+					/>
+				</svg>
+			</a>
+			<div>
+				<h1 class="text-lg font-bold">New Invoice</h1>
+				<div class="flex items-center gap-1 mt-0.5">
+					<div class="w-2 h-2 rounded-full bg-primary"></div>
+					<span class="text-[11px] font-semibold text-primary">Draft</span>
+				</div>
 			</div>
+		</div>
+	</div>
 
-			<div class="form-control mt-3">
-				<CustomerSelect bind:value={selectedCustomer} />
-			</div>
+	<!-- Invoice details -->
+	<div class="rounded-xl border border-base-content/10 bg-base-100 overflow-hidden">
+		<div class="p-4 space-y-3 text-sm">
+			<InvoiceNumber bind:value={invoiceNumber} />
+			<CustomerSelect bind:value={selectedCustomer} />
+			<DateSelect bind:invoiceDate bind:dueDate />
+		</div>
+	</div>
 
-			<div class="form-control mt-3">
-				<DateSelect bind:invoiceDate bind:dueDate />
-			</div>
-
-			<div class="form-control mt-3">
-				<InvoiceItems bind:value={items} bind:total={itemsTotal} {initialItems} />
-			</div>
+	<!-- Line items -->
+	<div class="rounded-xl border border-base-content/10 bg-base-100 overflow-hidden">
+		<div class="px-4 py-3 border-b border-base-content/5">
+			<span class="text-xs uppercase tracking-wider text-base-content/40 font-semibold"
+				>Line Items</span
+			>
+		</div>
+		<div class="p-4">
+			<InvoiceItems bind:value={items} bind:total={itemsTotal} {initialItems} />
 		</div>
 	</div>
 </div>

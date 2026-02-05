@@ -607,15 +607,18 @@
 
 	<!-- Edit item modal -->
 	<dialog class="modal" class:modal-open={showEditItemModal}>
-		<div class="modal-box">
-			<h3 class="font-bold text-lg">Edit Item</h3>
+		<div class="modal-box p-0 overflow-hidden">
+			<div class="bg-gradient-to-br from-primary/15 to-primary/5 px-5 py-4">
+				<h3 class="font-bold text-lg">Edit Item</h3>
+			</div>
 			<form
+				class="px-5 py-4"
 				onsubmit={(e) => {
 					e.preventDefault();
 					saveEditItem();
 				}}
 			>
-				<div class="form-control mt-4">
+				<div class="form-control">
 					<label class="label"><span class="label-text">Name</span></label>
 					<input type="text" class="input input-bordered input-sm" bind:value={editItemName} />
 				</div>
@@ -636,7 +639,7 @@
 						<input type="number" class="input input-bordered input-sm" bind:value={editItemQty} />
 					</div>
 				</div>
-				<div class="modal-action justify-between">
+				<div class="flex justify-between mt-5">
 					<button type="button" class="btn btn-error btn-sm" onclick={removeEditItem}>Delete</button
 					>
 					<div class="flex gap-2">
@@ -657,15 +660,18 @@
 
 	<!-- New item modal -->
 	<dialog class="modal" class:modal-open={showNewItemModal}>
-		<div class="modal-box">
-			<h3 class="font-bold text-lg">Add Item</h3>
+		<div class="modal-box p-0 overflow-hidden">
+			<div class="bg-gradient-to-br from-info/15 to-info/5 px-5 py-4">
+				<h3 class="font-bold text-lg">Add Item</h3>
+			</div>
 			<form
+				class="px-5 py-4"
 				onsubmit={(e) => {
 					e.preventDefault();
 					addNewItem();
 				}}
 			>
-				<div class="form-control mt-4">
+				<div class="form-control">
 					<label class="label"><span class="label-text">Name</span></label>
 					<input type="text" class="input input-bordered input-sm" bind:value={newItemName} />
 				</div>
@@ -686,7 +692,7 @@
 						<input type="number" class="input input-bordered input-sm" bind:value={newItemQty} />
 					</div>
 				</div>
-				<div class="modal-action">
+				<div class="flex justify-end gap-2 mt-5">
 					<button
 						type="button"
 						class="btn btn-ghost btn-sm"
@@ -703,16 +709,20 @@
 
 	<!-- Delete confirmation modal -->
 	<dialog class="modal" class:modal-open={showDeleteConfirm}>
-		<div class="modal-box">
-			<h3 class="font-bold text-lg">Delete Invoice</h3>
-			<p class="py-4 text-sm text-base-content/70">
-				Are you sure you want to delete INV-{inv.invoice_number}? This cannot be undone.
-			</p>
-			<div class="modal-action">
-				<button class="btn btn-ghost btn-sm" onclick={() => (showDeleteConfirm = false)}
-					>Cancel</button
-				>
-				<button class="btn btn-error btn-sm" onclick={confirmDelete}>Delete</button>
+		<div class="modal-box p-0 overflow-hidden">
+			<div class="bg-gradient-to-br from-error/15 to-error/5 px-5 py-4">
+				<h3 class="font-bold text-lg">Delete Invoice</h3>
+			</div>
+			<div class="px-5 py-4">
+				<p class="text-sm text-base-content/70">
+					Are you sure you want to delete INV-{inv.invoice_number}? This cannot be undone.
+				</p>
+				<div class="flex justify-end gap-2 mt-5">
+					<button class="btn btn-ghost btn-sm" onclick={() => (showDeleteConfirm = false)}
+						>Cancel</button
+					>
+					<button class="btn btn-error btn-sm" onclick={confirmDelete}>Delete</button>
+				</div>
 			</div>
 		</div>
 		<form method="dialog" class="modal-backdrop">
@@ -720,17 +730,22 @@
 		</form>
 	</dialog>
 
+	<!-- Timesheet warning modal -->
 	<dialog class="modal" class:modal-open={showTimesheetWarning}>
-		<div class="modal-box">
-			<h3 class="font-bold text-lg">No Timesheet Attached</h3>
-			<p class="py-4 text-sm text-base-content/70">
-				This invoice has no timesheet image attached. Do you still want to send it?
-			</p>
-			<div class="modal-action">
-				<button class="btn btn-ghost btn-sm" onclick={() => (showTimesheetWarning = false)}>
-					Cancel
-				</button>
-				<button class="btn btn-primary btn-sm" onclick={doSendInvoice}> Send Anyway </button>
+		<div class="modal-box p-0 overflow-hidden">
+			<div class="bg-gradient-to-br from-warning/15 to-warning/5 px-5 py-4">
+				<h3 class="font-bold text-lg">No Timesheet Attached</h3>
+			</div>
+			<div class="px-5 py-4">
+				<p class="text-sm text-base-content/70">
+					This invoice has no timesheet image attached. Do you still want to send it?
+				</p>
+				<div class="flex justify-end gap-2 mt-5">
+					<button class="btn btn-ghost btn-sm" onclick={() => (showTimesheetWarning = false)}
+						>Cancel</button
+					>
+					<button class="btn btn-primary btn-sm" onclick={doSendInvoice}>Send Anyway</button>
+				</div>
 			</div>
 		</div>
 		<form method="dialog" class="modal-backdrop">
