@@ -7,11 +7,11 @@
 	const { category = $bindable() } = $props();
 </script>
 
-<div class="rounded-xl border border-base-content/10 bg-base-100 overflow-hidden mt-3">
+<div class="rounded-xl border border-base-content/10 bg-base-100 overflow-hidden mt-2">
 	<!-- Category header -->
-	<div class="flex items-center justify-between px-4 py-3 border-b border-base-content/5">
+	<div class="flex items-center justify-between px-3 py-1.5 border-b border-base-content/5">
 		<button
-			class="flex items-center gap-2 hover:opacity-70 transition-opacity"
+			class="flex items-center gap-1.5 hover:opacity-70 transition-opacity"
 			onclick={() =>
 				modals.editCategory.show(
 					category.id,
@@ -21,24 +21,22 @@
 				)}
 		>
 			{#if category.emoji}
-				<div class="w-7 h-7 rounded-lg bg-base-content/5 flex items-center justify-center text-sm">
-					{category.emoji}
-				</div>
+				<span class="text-sm">{category.emoji}</span>
 			{/if}
-			<span class="font-bold text-sm">{category.name}</span>
+			<span class="font-bold text-xs">{category.name}</span>
 		</button>
-		<span class="text-sm font-bold">{formatCurrency(category.total)}</span>
+		<span class="text-xs font-bold">{formatCurrency(category.total)}</span>
 	</div>
 
 	<!-- Expenses -->
-	<div class="py-1">
+	<div>
 		{#each category.expenses as expense (expense.id)}
 			<ExpenseView {expense} />
 		{/each}
 	</div>
 
 	<!-- Add item -->
-	<div class="border-t border-base-content/5 px-3 py-2">
+	<div class="border-t border-base-content/5 px-3 py-1">
 		<button
 			class="btn btn-ghost btn-xs w-full text-base-content/30"
 			onclick={() => {
