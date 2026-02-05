@@ -110,13 +110,25 @@
 
 	{#each weeks as week (week.number)}
 		<button
-			class="flex items-center justify-center h-11 text-[10px] font-semibold rounded transition-colors hover:bg-base-200 {week.number ===
+			class="flex items-center justify-center gap-0.5 h-11 text-[10px] font-semibold rounded-lg transition-colors bg-base-200/40 hover:bg-base-300 {week.number ===
 			currentWeek
-				? 'text-primary'
-				: 'text-base-content/25'}"
+				? 'text-primary bg-primary/10 hover:bg-primary/20'
+				: 'text-base-content/50'}"
 			onclick={() => onWeekClick(week)}
 		>
 			{week.number}
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				viewBox="0 0 16 16"
+				fill="currentColor"
+				class="w-2.5 h-2.5 opacity-50"
+			>
+				<path
+					fill-rule="evenodd"
+					d="M6.22 4.22a.75.75 0 0 1 1.06 0l3.25 3.25a.75.75 0 0 1 0 1.06l-3.25 3.25a.75.75 0 0 1-1.06-1.06L8.94 8 6.22 5.28a.75.75 0 0 1 0-1.06Z"
+					clip-rule="evenodd"
+				/>
+			</svg>
 		</button>
 		{#each week.days as cell, di (cell.date)}
 			{@const isToday = cell.date === todayStr}
