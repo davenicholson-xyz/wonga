@@ -150,6 +150,9 @@
 		deleting = false;
 	}
 
+	// Tabs
+	let activeTab = $state('payment');
+
 	// Data import/export
 	let importing = $state(false);
 	let importError = $state('');
@@ -212,74 +215,98 @@
 	}
 </script>
 
-<h1 class="text-2xl font-bold mb-6">Settings</h1>
+<h1 class="text-2xl font-bold mb-4">Settings</h1>
 
-<div class="tabs tabs-lift">
-	<input type="radio" name="settings_tabs" class="tab" aria-label="Payment Details" checked />
-	<div class="tab-content bg-base-200 border-base-300 p-4">
-		<div class="form-control">
-			<label class="label" for="payment-name">
-				<span class="label-text">Payment Name</span>
-			</label>
-			<input
-				id="payment-name"
-				type="text"
-				class="input input-bordered input-sm w-full"
-				placeholder="e.g. John Smith"
-				bind:value={payment_name}
-			/>
-		</div>
+<!-- Tab navigation -->
+<div class="flex gap-1.5 mb-4 overflow-x-auto">
+	{#each [
+		{ id: 'payment', label: 'Payment' },
+		{ id: 'rates', label: 'Rates' },
+		{ id: 'customers', label: 'Customers' },
+		{ id: 'ui', label: 'UI' },
+		{ id: 'data', label: 'Data' }
+	] as tab}
+		<button
+			class="px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap
+				{activeTab === tab.id
+				? 'bg-primary text-primary-content'
+				: 'bg-base-content/5 text-base-content/50 hover:text-base-content/70'}"
+			onclick={() => (activeTab = tab.id)}
+		>
+			{tab.label}
+		</button>
+	{/each}
+</div>
 
-		<div class="form-control mt-2">
-			<label class="label" for="account-number">
-				<span class="label-text">Account Number</span>
-			</label>
-			<input
-				id="account-number"
-				type="text"
-				class="input input-bordered input-sm w-full"
-				placeholder="e.g. 12345678"
-				bind:value={account_number}
-			/>
-		</div>
+<!-- Payment Details -->
+{#if activeTab === 'payment'}
+	<div class="rounded-xl border border-base-content/10 bg-base-100 p-4">
+		<h2 class="text-sm font-semibold text-base-content/60 mb-3">Payment Details</h2>
+		<div class="flex flex-col gap-2">
+			<div class="form-control">
+				<label class="label" for="payment-name">
+					<span class="label-text text-xs">Payment Name</span>
+				</label>
+				<input
+					id="payment-name"
+					type="text"
+					class="input input-bordered input-sm w-full"
+					placeholder="e.g. John Smith"
+					bind:value={payment_name}
+				/>
+			</div>
 
-		<div class="form-control mt-2">
-			<label class="label" for="sort-code">
-				<span class="label-text">Sort Code</span>
-			</label>
-			<input
-				id="sort-code"
-				type="text"
-				class="input input-bordered input-sm w-full"
-				placeholder="e.g. 12-34-56"
-				bind:value={sort_code}
-			/>
-		</div>
+			<div class="form-control">
+				<label class="label" for="account-number">
+					<span class="label-text text-xs">Account Number</span>
+				</label>
+				<input
+					id="account-number"
+					type="text"
+					class="input input-bordered input-sm w-full"
+					placeholder="e.g. 12345678"
+					bind:value={account_number}
+				/>
+			</div>
 
-		<div class="form-control mt-2">
-			<label class="label" for="address">
-				<span class="label-text">Address</span>
-			</label>
-			<textarea
-				id="address"
-				class="textarea textarea-bordered textarea-sm w-full"
-				rows="3"
-				placeholder="e.g. 10 Downing Street&#10;London&#10;SW1A 2AA"
-				bind:value={address}
-			></textarea>
-		</div>
+			<div class="form-control">
+				<label class="label" for="sort-code">
+					<span class="label-text text-xs">Sort Code</span>
+				</label>
+				<input
+					id="sort-code"
+					type="text"
+					class="input input-bordered input-sm w-full"
+					placeholder="e.g. 12-34-56"
+					bind:value={sort_code}
+				/>
+			</div>
 
-		<div class="form-control mt-2">
-			<label class="label" for="email">
-				<span class="label-text">Email</span>
-			</label>
-			<input
-				id="email"
-				type="email"
-				class="input input-bordered input-sm w-full"
-				placeholder="e.g. you@example.com"
-				bind:value={email}
-			/>
+			<div class="form-control">
+				<label class="label" for="address">
+					<span class="label-text text-xs">Address</span>
+				</label>
+				<textarea
+					id="address"
+					class="textarea textarea-bordered textarea-sm w-full"
+					rows="3"
+					placeholder="e.g. 10 Downing Street&#10;London&#10;SW1A 2AA"
+					bind:value={address}
+				></textarea>
+			</div>
+
+			<div class="form-control">
+				<label class="label" for="email">
+					<span class="label-text text-xs">Email</span>
+				</label>
+				<input
+					id="email"
+					type="email"
+					class="input input-bordered input-sm w-full"
+					placeholder="e.g. you@example.com"
+					bind:value={email}
+				/>
+			</div>
 		</div>
 
 		<div class="mt-4 flex items-center gap-2">
@@ -287,17 +314,17 @@
 				{saving ? 'Saving...' : 'Save'}
 			</button>
 			{#if saved}
-				<span class="text-sm text-success">Saved</span>
+				<span class="text-xs text-success">Saved</span>
 			{/if}
 		</div>
 	</div>
+{/if}
 
-	<input type="radio" name="settings_tabs" class="tab" aria-label="Rates" />
-	<div class="tab-content bg-base-200 border-base-300 p-4">
+<!-- Rates -->
+{#if activeTab === 'rates'}
+	<div class="rounded-xl border border-base-content/10 bg-base-100 p-4">
+		<h2 class="text-sm font-semibold text-base-content/60 mb-3">Hourly Rate</h2>
 		<div class="form-control">
-			<label class="label" for="hourly-rate">
-				<span class="label-text">Hourly Rate</span>
-			</label>
 			<label class="input input-bordered input-sm flex items-center gap-1 w-full">
 				<span class="text-base-content/60">£</span>
 				<input
@@ -308,7 +335,7 @@
 					bind:value={hourly_rate}
 				/>
 			</label>
-			<p class="text-xs text-base-content/40 mt-1">
+			<p class="text-[11px] text-base-content/40 mt-1.5">
 				Used for timesheet earnings and invoice prices
 			</p>
 		</div>
@@ -318,41 +345,48 @@
 				{rateSaving ? 'Saving...' : 'Save'}
 			</button>
 			{#if rateSaved}
-				<span class="text-sm text-success">Saved</span>
+				<span class="text-xs text-success">Saved</span>
 			{/if}
 		</div>
 	</div>
+{/if}
 
-	<input type="radio" name="settings_tabs" class="tab" aria-label="Customers" />
-	<div class="tab-content bg-base-200 border-base-300 p-4">
+<!-- Customers -->
+{#if activeTab === 'customers'}
+	<div class="flex flex-col gap-2">
 		{#if customers.length === 0}
-			<p class="text-sm text-base-content/60">No customers yet.</p>
+			<div class="rounded-xl border border-base-content/10 bg-base-100 p-4">
+				<p class="text-sm text-base-content/40">No customers yet.</p>
+			</div>
 		{:else}
-			<div class="flex flex-col gap-3">
-				{#each customers as c (c.id)}
-					<div class="card bg-base-100 shadow-sm">
-						<div class="card-body p-4">
-							<h3 class="font-semibold">{c.name}</h3>
-							<p class="text-sm text-base-content/60">{c.email}</p>
-							<p class="text-sm text-base-content/60 whitespace-pre-line mt-1">{c.address}</p>
-							<div class="card-actions mt-2">
-								<button class="btn btn-ghost btn-xs" onclick={() => openEdit(c)}>Edit</button>
-								<button class="btn btn-ghost btn-xs text-error" onclick={() => openDelete(c)}
-									>Delete</button
-								>
-							</div>
+			{#each customers as c (c.id)}
+				<div class="rounded-xl border border-base-content/10 bg-base-100 p-3">
+					<div class="flex items-start justify-between gap-3">
+						<div class="min-w-0">
+							<h3 class="font-bold text-xs">{c.name}</h3>
+							<p class="text-[11px] text-base-content/50 mt-0.5">{c.email}</p>
+							{#if c.address}
+								<p class="text-[11px] text-base-content/40 whitespace-pre-line mt-1">{c.address}</p>
+							{/if}
+						</div>
+						<div class="flex gap-1 shrink-0">
+							<button class="btn btn-ghost btn-xs" onclick={() => openEdit(c)}>Edit</button>
+							<button class="btn btn-ghost btn-xs text-error" onclick={() => openDelete(c)}>Delete</button>
 						</div>
 					</div>
-				{/each}
-			</div>
+				</div>
+			{/each}
 		{/if}
 	</div>
+{/if}
 
-	<input type="radio" name="settings_tabs" class="tab" aria-label="UI" />
-	<div class="tab-content bg-base-200 border-base-300 p-4">
+<!-- UI -->
+{#if activeTab === 'ui'}
+	<div class="rounded-xl border border-base-content/10 bg-base-100 p-4">
+		<h2 class="text-sm font-semibold text-base-content/60 mb-3">Appearance</h2>
 		<div class="form-control">
 			<label class="label" for="theme-select">
-				<span class="label-text">Color Theme</span>
+				<span class="label-text text-xs">Color Theme</span>
 			</label>
 			<select
 				id="theme-select"
@@ -366,114 +400,111 @@
 			</select>
 		</div>
 
-		<div class="mt-4 rounded-lg overflow-hidden border border-base-300" data-theme={selectedTheme}>
-			<div class="bg-base-100 p-4">
-				<div class="flex items-center justify-between mb-3">
-					<span class="text-base-content font-semibold text-sm">Preview</span>
+		<div class="mt-3 rounded-xl overflow-hidden border border-base-content/10" data-theme={selectedTheme}>
+			<div class="bg-base-100 p-3">
+				<div class="flex items-center justify-between mb-2.5">
+					<span class="text-base-content text-xs font-semibold">Preview</span>
 					<div class="flex gap-1">
-						<span class="badge badge-sm badge-primary">Primary</span>
-						<span class="badge badge-sm badge-secondary">Secondary</span>
-						<span class="badge badge-sm badge-accent">Accent</span>
+						<span class="badge badge-xs badge-primary">Primary</span>
+						<span class="badge badge-xs badge-secondary">Secondary</span>
+						<span class="badge badge-xs badge-accent">Accent</span>
 					</div>
 				</div>
-				<div class="flex gap-2 mb-3">
+				<div class="flex gap-1.5 mb-2.5">
 					<button class="btn btn-primary btn-xs">Button</button>
 					<button class="btn btn-secondary btn-xs">Button</button>
 					<button class="btn btn-accent btn-xs">Button</button>
 					<button class="btn btn-neutral btn-xs">Button</button>
 				</div>
-				<div class="bg-base-200 rounded-lg p-3">
+				<div class="bg-base-200 rounded-lg p-2.5">
 					<div class="flex items-center gap-3">
 						<div class="flex gap-1">
-							<span class="size-4 rounded-full bg-primary"></span>
-							<span class="size-4 rounded-full bg-secondary"></span>
-							<span class="size-4 rounded-full bg-accent"></span>
-							<span class="size-4 rounded-full bg-neutral"></span>
+							<span class="size-3.5 rounded-full bg-primary"></span>
+							<span class="size-3.5 rounded-full bg-secondary"></span>
+							<span class="size-3.5 rounded-full bg-accent"></span>
+							<span class="size-3.5 rounded-full bg-neutral"></span>
 						</div>
 						<div class="flex gap-1">
-							<span class="size-4 rounded bg-info"></span>
-							<span class="size-4 rounded bg-success"></span>
-							<span class="size-4 rounded bg-warning"></span>
-							<span class="size-4 rounded bg-error"></span>
+							<span class="size-3.5 rounded bg-info"></span>
+							<span class="size-3.5 rounded bg-success"></span>
+							<span class="size-3.5 rounded bg-warning"></span>
+							<span class="size-3.5 rounded bg-error"></span>
 						</div>
 					</div>
-					<p class="text-xs text-base-content/60 mt-2">Sample text on base-200</p>
+					<p class="text-[11px] text-base-content/50 mt-2">Sample text on base-200</p>
 				</div>
 			</div>
 		</div>
 	</div>
+{/if}
 
-	<input type="radio" name="settings_tabs" class="tab" aria-label="Data" />
-	<div class="tab-content bg-base-200 border-base-300 p-4">
-		<div class="space-y-6">
-			<div>
-				<h3 class="font-semibold text-sm mb-2">Export</h3>
-				<p class="text-xs text-base-content/60 mb-3">
-					Download a backup of all your data including invoices, customers, timesheets, budget, and
-					settings.
-				</p>
-				<a href={resolve('/settings/export')} download class="btn btn-primary btn-sm">
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						viewBox="0 0 20 20"
-						fill="currentColor"
-						class="size-4"
-					>
-						<path
-							d="M10.75 2.75a.75.75 0 0 0-1.5 0v8.614L6.295 8.235a.75.75 0 1 0-1.09 1.03l4.25 4.5a.75.75 0 0 0 1.09 0l4.25-4.5a.75.75 0 0 0-1.09-1.03l-2.955 3.129V2.75Z"
-						/>
-						<path
-							d="M3.5 12.75a.75.75 0 0 0-1.5 0v2.5A2.75 2.75 0 0 0 4.75 18h10.5A2.75 2.75 0 0 0 18 15.25v-2.5a.75.75 0 0 0-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5Z"
-						/>
-					</svg>
-					Download Backup
-				</a>
-			</div>
-
-			<div class="divider my-0"></div>
-
-			<div>
-				<h3 class="font-semibold text-sm mb-2">Import</h3>
-				<p class="text-xs text-base-content/60 mb-3">
-					Restore from a backup file. This will replace all existing data.
-				</p>
-				<button
-					class="btn btn-sm btn-outline"
-					onclick={() => fileInput.click()}
-					disabled={importing}
+<!-- Data -->
+{#if activeTab === 'data'}
+	<div class="flex flex-col gap-3">
+		<div class="rounded-xl border border-base-content/10 bg-base-100 p-4">
+			<h2 class="text-sm font-semibold text-base-content/60 mb-1">Export</h2>
+			<p class="text-[11px] text-base-content/40 mb-3">
+				Download a backup of all your data including invoices, customers, timesheets, budget, and settings.
+			</p>
+			<a href={resolve('/settings/export')} download class="btn btn-primary btn-sm">
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					viewBox="0 0 20 20"
+					fill="currentColor"
+					class="size-4"
 				>
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						viewBox="0 0 20 20"
-						fill="currentColor"
-						class="size-4"
-					>
-						<path
-							d="M9.25 13.25a.75.75 0 0 0 1.5 0V4.636l2.955 3.129a.75.75 0 0 0 1.09-1.03l-4.25-4.5a.75.75 0 0 0-1.09 0l-4.25 4.5a.75.75 0 1 0 1.09 1.03L9.25 4.636v8.614Z"
-						/>
-						<path
-							d="M3.5 12.75a.75.75 0 0 0-1.5 0v2.5A2.75 2.75 0 0 0 4.75 18h10.5A2.75 2.75 0 0 0 18 15.25v-2.5a.75.75 0 0 0-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5Z"
-						/>
-					</svg>
-					{importing ? 'Importing...' : 'Upload Backup'}
-				</button>
-				<input
-					bind:this={fileInput}
-					type="file"
-					accept=".json"
-					class="hidden"
-					onchange={handleFileSelect}
-				/>
-				{#if importError}
-					<div class="alert alert-error mt-3 text-sm">{importError}</div>
-				{/if}
-				{#if importSuccess}
-					<div class="alert alert-success mt-3 text-sm">Data restored successfully.</div>
-				{/if}
-			</div>
+					<path
+						d="M10.75 2.75a.75.75 0 0 0-1.5 0v8.614L6.295 8.235a.75.75 0 1 0-1.09 1.03l4.25 4.5a.75.75 0 0 0 1.09 0l4.25-4.5a.75.75 0 0 0-1.09-1.03l-2.955 3.129V2.75Z"
+					/>
+					<path
+						d="M3.5 12.75a.75.75 0 0 0-1.5 0v2.5A2.75 2.75 0 0 0 4.75 18h10.5A2.75 2.75 0 0 0 18 15.25v-2.5a.75.75 0 0 0-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5Z"
+					/>
+				</svg>
+				Download Backup
+			</a>
+		</div>
+
+		<div class="rounded-xl border border-base-content/10 bg-base-100 p-4">
+			<h2 class="text-sm font-semibold text-base-content/60 mb-1">Import</h2>
+			<p class="text-[11px] text-base-content/40 mb-3">
+				Restore from a backup file. This will replace all existing data.
+			</p>
+			<button
+				class="btn btn-sm btn-outline"
+				onclick={() => fileInput.click()}
+				disabled={importing}
+			>
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					viewBox="0 0 20 20"
+					fill="currentColor"
+					class="size-4"
+				>
+					<path
+						d="M9.25 13.25a.75.75 0 0 0 1.5 0V4.636l2.955 3.129a.75.75 0 0 0 1.09-1.03l-4.25-4.5a.75.75 0 0 0-1.09 0l-4.25 4.5a.75.75 0 1 0 1.09 1.03L9.25 4.636v8.614Z"
+					/>
+					<path
+						d="M3.5 12.75a.75.75 0 0 0-1.5 0v2.5A2.75 2.75 0 0 0 4.75 18h10.5A2.75 2.75 0 0 0 18 15.25v-2.5a.75.75 0 0 0-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5Z"
+					/>
+				</svg>
+				{importing ? 'Importing...' : 'Upload Backup'}
+			</button>
+			<input
+				bind:this={fileInput}
+				type="file"
+				accept=".json"
+				class="hidden"
+				onchange={handleFileSelect}
+			/>
+			{#if importError}
+				<div class="alert alert-error mt-3 text-xs">{importError}</div>
+			{/if}
+			{#if importSuccess}
+				<div class="alert alert-success mt-3 text-xs">Data restored successfully.</div>
+			{/if}
 		</div>
 	</div>
-</div>
+{/if}
 
 <!-- Edit Customer Modal -->
 <dialog bind:this={editModal} class="modal">
