@@ -12,6 +12,7 @@
 	const weekends = $derived(
 		days.filter((d) => d.entry && (d.dayOfWeek === 0 || d.dayOfWeek === 6))
 	);
+	const allWithEntries = $derived(days.filter((d) => d.entry));
 
 	function formatDate(date: string) {
 		const [y, m, d] = date.split('-');
@@ -58,6 +59,14 @@
 <dialog class="modal" class:modal-open={showModal}>
 	<div class="modal-box">
 		<h3 class="font-bold text-lg mb-4">Week {weekNumber}</h3>
+
+		{#if allWithEntries.length > 0}
+			<div class="text-sm text-base-content/60 mb-4">
+				Total: <span class="font-bold text-base-content"
+					>{totalHours(allWithEntries).toFixed(1)} hrs</span
+				>
+			</div>
+		{/if}
 
 		{#if weekdays.length > 0}
 			<h4 class="font-semibold text-sm text-base-content/60 mb-2">Weekdays</h4>
