@@ -6,6 +6,7 @@ export type Entry = {
 	location: string;
 	start_time: string;
 	end_time: string;
+	unavailable: boolean | null;
 };
 
 type Day = { date: string; dayOfWeek: number; entry?: Entry };

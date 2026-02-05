@@ -35,13 +35,18 @@ export const edit_timesheet = form(
 		location: v.string(),
 		start_time: v.string(),
 		end_time: v.string(),
-		repeat: v.optional(v.number(), 0)
+		repeat: v.optional(v.number(), 0),
+		unavailable: v.optional(v.string(), 'false')
 	}),
-	async ({ date, location, start_time, end_time, repeat }) => {
+	async ({ date, location, start_time, end_time, repeat, unavailable: unavailableStr }) => {
+		const unavailable = unavailableStr === 'true';
 		await db
 			.insert(timesheet)
-			.values({ date, location, start_time, end_time })
-			.onConflictDoUpdate({ target: timesheet.date, set: { location, start_time, end_time } });
+			.values({ date, location, start_time, end_time, unavailable })
+			.onConflictDoUpdate({
+				target: timesheet.date,
+				set: { location, start_time, end_time, unavailable }
+			});
 
 		if (repeat > 1) {
 			const baseDate = new Date(date);
@@ -57,8 +62,11 @@ export const edit_timesheet = form(
 
 				await db
 					.insert(timesheet)
-					.values({ date: dateStr, location, start_time, end_time })
-					.onConflictDoUpdate({ target: timesheet.date, set: { location, start_time, end_time } });
+					.values({ date: dateStr, location, start_time, end_time, unavailable })
+					.onConflictDoUpdate({
+						target: timesheet.date,
+						set: { location, start_time, end_time, unavailable }
+					});
 
 				monthsToRefresh.add(`${y}-${m}-1`);
 			}

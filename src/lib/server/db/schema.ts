@@ -66,5 +66,6 @@ export const timesheet = sqliteTable('timesheet', {
 	location: text('location').notNull(),
 	date: text('date').notNull().unique(),
 	start_time: text('start_time').notNull(),
-	end_time: text('end_time').notNull()
+	end_time: text('end_time').notNull(),
+	unavailable: integer('unavailable', { mode: 'boolean' }).default(false)
 });
