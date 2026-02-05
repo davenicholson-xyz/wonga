@@ -106,7 +106,8 @@
 	}
 
 	const tmonth = $derived(get_timesheet_for_month(`${parseInt(year)}-${parseInt(month)}-1`));
-	const entries = $derived(tmonth.current ?? []);
+	const allEntries = $derived(tmonth.current ?? []);
+	const entries = $derived(allEntries.filter((e) => !e.unavailable));
 
 	function parseHours(start: string, end: string): number {
 		const [sh, sm] = start.split(':').map(Number);

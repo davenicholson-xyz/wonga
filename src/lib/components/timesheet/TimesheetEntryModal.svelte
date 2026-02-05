@@ -71,9 +71,9 @@
 			</label>
 
 			{#if unavailable}
-				<input {...edit_timesheet.fields.location.as('text')} type="hidden" value={location} />
-				<input {...edit_timesheet.fields.start_time.as('text')} type="hidden" value={startTime} />
-				<input {...edit_timesheet.fields.end_time.as('text')} type="hidden" value={endTime} />
+				<input {...edit_timesheet.fields.location.as('text')} type="hidden" value="" />
+				<input {...edit_timesheet.fields.start_time.as('text')} type="hidden" value="00:00" />
+				<input {...edit_timesheet.fields.end_time.as('text')} type="hidden" value="00:00" />
 			{/if}
 
 			{#if !unavailable}
