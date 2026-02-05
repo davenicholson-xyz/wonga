@@ -8,11 +8,13 @@
 	let days = $state<Day[]>([]);
 	let weekNumber = $state(0);
 
-	const weekdays = $derived(days.filter((d) => d.entry && d.dayOfWeek >= 1 && d.dayOfWeek <= 5));
-	const weekends = $derived(
-		days.filter((d) => d.entry && (d.dayOfWeek === 0 || d.dayOfWeek === 6))
+	const weekdays = $derived(
+		days.filter((d) => d.entry && !d.entry.unavailable && d.dayOfWeek >= 1 && d.dayOfWeek <= 5)
 	);
-	const allWithEntries = $derived(days.filter((d) => d.entry));
+	const weekends = $derived(
+		days.filter((d) => d.entry && !d.entry.unavailable && (d.dayOfWeek === 0 || d.dayOfWeek === 6))
+	);
+	const allWithEntries = $derived(days.filter((d) => d.entry && !d.entry.unavailable));
 	const weekTotalHours = $derived(totalHours(allWithEntries));
 
 	const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
