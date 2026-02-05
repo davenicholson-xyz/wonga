@@ -60,6 +60,25 @@ export const save_rate_settings = command(
 	}
 );
 
+export const get_theme_setting = query(async () => {
+	const row = await db.select().from(settings).where(eq(settings.key, 'theme')).execute();
+	return {
+		theme: row[0]?.value ?? 'dim'
+	};
+});
+
+export const save_theme_setting = command(
+	v.object({
+		theme: v.string()
+	}),
+	async ({ theme }) => {
+		await db
+			.insert(settings)
+			.values({ key: 'theme', value: theme })
+			.onConflictDoUpdate({ target: settings.key, set: { value: theme } });
+	}
+);
+
 export const save_payment_settings = command(
 	v.object({
 		payment_name: v.string(),

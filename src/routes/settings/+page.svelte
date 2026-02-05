@@ -4,7 +4,9 @@
 		get_payment_settings,
 		save_payment_settings,
 		get_rate_settings,
-		save_rate_settings
+		save_rate_settings,
+		get_theme_setting,
+		save_theme_setting
 	} from '$lib/funcs/settings.remote';
 	import { get_customers, update_customer, delete_customer } from '$lib/funcs/customers.remote';
 
@@ -61,6 +63,32 @@
 		rateSaving = false;
 		rateSaved = true;
 		setTimeout(() => (rateSaved = false), 2000);
+	}
+
+	// Theme
+	const themes = [
+		'light', 'dark', 'cupcake', 'bumblebee', 'emerald', 'corporate', 'synthwave',
+		'retro', 'cyberpunk', 'valentine', 'halloween', 'garden', 'forest', 'aqua',
+		'lofi', 'pastel', 'fantasy', 'wireframe', 'black', 'luxury', 'dracula',
+		'cmyk', 'autumn', 'business', 'acid', 'lemonade', 'night', 'coffee',
+		'winter', 'dim', 'nord', 'sunset'
+	];
+
+	const themeData = get_theme_setting();
+	const themeSetting = $derived(themeData.current);
+	let selectedTheme = $state('dim');
+
+	$effect(() => {
+		if (themeSetting) {
+			selectedTheme = themeSetting.theme;
+		}
+	});
+
+	/** @param {string} theme */
+	function applyTheme(theme) {
+		selectedTheme = theme;
+		document.documentElement.setAttribute('data-theme', theme);
+		save_theme_setting({ theme });
 	}
 
 	// Customers
@@ -318,6 +346,61 @@
 				{/each}
 			</div>
 		{/if}
+	</div>
+
+	<input type="radio" name="settings_tabs" class="tab" aria-label="UI" />
+	<div class="tab-content bg-base-200 border-base-300 p-4">
+		<div class="form-control">
+			<label class="label" for="theme-select">
+				<span class="label-text">Color Theme</span>
+			</label>
+			<select
+				id="theme-select"
+				class="select select-bordered select-sm w-full"
+				value={selectedTheme}
+				onchange={(e) => applyTheme(e.currentTarget.value)}
+			>
+				{#each themes as theme}
+					<option value={theme}>{theme.charAt(0).toUpperCase() + theme.slice(1)}</option>
+				{/each}
+			</select>
+		</div>
+
+		<div class="mt-4 rounded-lg overflow-hidden border border-base-300" data-theme={selectedTheme}>
+			<div class="bg-base-100 p-4">
+				<div class="flex items-center justify-between mb-3">
+					<span class="text-base-content font-semibold text-sm">Preview</span>
+					<div class="flex gap-1">
+						<span class="badge badge-sm badge-primary">Primary</span>
+						<span class="badge badge-sm badge-secondary">Secondary</span>
+						<span class="badge badge-sm badge-accent">Accent</span>
+					</div>
+				</div>
+				<div class="flex gap-2 mb-3">
+					<button class="btn btn-primary btn-xs">Button</button>
+					<button class="btn btn-secondary btn-xs">Button</button>
+					<button class="btn btn-accent btn-xs">Button</button>
+					<button class="btn btn-neutral btn-xs">Button</button>
+				</div>
+				<div class="bg-base-200 rounded-lg p-3">
+					<div class="flex items-center gap-3">
+						<div class="flex gap-1">
+							<span class="size-4 rounded-full bg-primary"></span>
+							<span class="size-4 rounded-full bg-secondary"></span>
+							<span class="size-4 rounded-full bg-accent"></span>
+							<span class="size-4 rounded-full bg-neutral"></span>
+						</div>
+						<div class="flex gap-1">
+							<span class="size-4 rounded bg-info"></span>
+							<span class="size-4 rounded bg-success"></span>
+							<span class="size-4 rounded bg-warning"></span>
+							<span class="size-4 rounded bg-error"></span>
+						</div>
+					</div>
+					<p class="text-xs text-base-content/60 mt-2">Sample text on base-200</p>
+				</div>
+			</div>
+		</div>
 	</div>
 
 	<input type="radio" name="settings_tabs" class="tab" aria-label="Data" />

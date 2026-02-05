@@ -3,8 +3,18 @@
 	import favicon from '$lib/assets/favicon.svg';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
+	import { get_theme_setting } from '$lib/funcs/settings.remote';
 
 	let { children } = $props();
+
+	const themeData = get_theme_setting();
+	const themeSetting = $derived(themeData.current);
+
+	$effect(() => {
+		if (themeSetting?.theme) {
+			document.documentElement.setAttribute('data-theme', themeSetting.theme);
+		}
+	});
 
 	const isTimesheet = $derived(
 		page.url.pathname === '/' || page.url.pathname.startsWith('/timesheet')
