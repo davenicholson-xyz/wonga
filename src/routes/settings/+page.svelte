@@ -428,57 +428,47 @@
 	<div class="rounded-xl border border-base-content/10 bg-base-100 p-4">
 		<h2 class="text-sm font-semibold text-base-content/60 mb-3">Appearance</h2>
 		<div class="form-control">
-			<label class="label" for="theme-select">
-				<span class="label-text text-xs">Color Theme</span>
+			<label class="label">
+				<span class="label-text text-xs">Colour Theme</span>
 			</label>
-			<select
-				id="theme-select"
-				class="select select-bordered select-sm w-full"
-				value={selectedTheme}
-				onchange={(e) => applyTheme(e.currentTarget.value)}
-			>
+			<div class="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto pr-1">
 				{#each themes as theme}
-					<option value={theme}>{theme.charAt(0).toUpperCase() + theme.slice(1)}</option>
+					<button
+						class="rounded-lg overflow-hidden border-2 transition-all {selectedTheme === theme
+							? 'border-primary ring-1 ring-primary/30'
+							: 'border-base-content/10 hover:border-base-content/20'}"
+						onclick={() => applyTheme(theme)}
+						data-theme={theme}
+					>
+						<div class="bg-base-100 p-2">
+							<div class="flex items-center justify-between mb-1.5">
+								<span class="text-[10px] font-medium text-base-content truncate">
+									{theme.charAt(0).toUpperCase() + theme.slice(1)}
+								</span>
+								{#if selectedTheme === theme}
+									<svg
+										xmlns="http://www.w3.org/2000/svg"
+										viewBox="0 0 16 16"
+										fill="currentColor"
+										class="w-3 h-3 text-primary shrink-0"
+									>
+										<path
+											fill-rule="evenodd"
+											d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z"
+											clip-rule="evenodd"
+										/>
+									</svg>
+								{/if}
+							</div>
+							<div class="flex gap-1">
+								<span class="size-3 rounded-full bg-primary"></span>
+								<span class="size-3 rounded-full bg-secondary"></span>
+								<span class="size-3 rounded-full bg-accent"></span>
+								<span class="size-3 rounded-full bg-neutral"></span>
+							</div>
+						</div>
+					</button>
 				{/each}
-			</select>
-		</div>
-
-		<div
-			class="mt-3 rounded-xl overflow-hidden border border-base-content/10"
-			data-theme={selectedTheme}
-		>
-			<div class="bg-base-100 p-3">
-				<div class="flex items-center justify-between mb-2.5">
-					<span class="text-base-content text-xs font-semibold">Preview</span>
-					<div class="flex gap-1">
-						<span class="badge badge-xs badge-primary">Primary</span>
-						<span class="badge badge-xs badge-secondary">Secondary</span>
-						<span class="badge badge-xs badge-accent">Accent</span>
-					</div>
-				</div>
-				<div class="flex gap-1.5 mb-2.5">
-					<button class="btn btn-primary btn-xs">Button</button>
-					<button class="btn btn-secondary btn-xs">Button</button>
-					<button class="btn btn-accent btn-xs">Button</button>
-					<button class="btn btn-neutral btn-xs">Button</button>
-				</div>
-				<div class="bg-base-200 rounded-lg p-2.5">
-					<div class="flex items-center gap-3">
-						<div class="flex gap-1">
-							<span class="size-3.5 rounded-full bg-primary"></span>
-							<span class="size-3.5 rounded-full bg-secondary"></span>
-							<span class="size-3.5 rounded-full bg-accent"></span>
-							<span class="size-3.5 rounded-full bg-neutral"></span>
-						</div>
-						<div class="flex gap-1">
-							<span class="size-3.5 rounded bg-info"></span>
-							<span class="size-3.5 rounded bg-success"></span>
-							<span class="size-3.5 rounded bg-warning"></span>
-							<span class="size-3.5 rounded bg-error"></span>
-						</div>
-					</div>
-					<p class="text-[11px] text-base-content/50 mt-2">Sample text on base-200</p>
-				</div>
 			</div>
 		</div>
 	</div>
