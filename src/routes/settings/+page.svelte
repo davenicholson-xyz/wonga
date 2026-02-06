@@ -6,7 +6,9 @@
 		get_rate_settings,
 		save_rate_settings,
 		get_theme_setting,
-		save_theme_setting
+		save_theme_setting,
+		get_image_size_setting,
+		save_image_size_setting
 	} from '$lib/funcs/settings.remote';
 	import { get_customers, update_customer, delete_customer } from '$lib/funcs/customers.remote';
 
@@ -67,11 +69,38 @@
 
 	// Theme
 	const themes = [
-		'light', 'dark', 'cupcake', 'bumblebee', 'emerald', 'corporate', 'synthwave',
-		'retro', 'cyberpunk', 'valentine', 'halloween', 'garden', 'forest', 'aqua',
-		'lofi', 'pastel', 'fantasy', 'wireframe', 'black', 'luxury', 'dracula',
-		'cmyk', 'autumn', 'business', 'acid', 'lemonade', 'night', 'coffee',
-		'winter', 'dim', 'nord', 'sunset'
+		'light',
+		'dark',
+		'cupcake',
+		'bumblebee',
+		'emerald',
+		'corporate',
+		'synthwave',
+		'retro',
+		'cyberpunk',
+		'valentine',
+		'halloween',
+		'garden',
+		'forest',
+		'aqua',
+		'lofi',
+		'pastel',
+		'fantasy',
+		'wireframe',
+		'black',
+		'luxury',
+		'dracula',
+		'cmyk',
+		'autumn',
+		'business',
+		'acid',
+		'lemonade',
+		'night',
+		'coffee',
+		'winter',
+		'dim',
+		'nord',
+		'sunset'
 	];
 
 	const themeData = get_theme_setting();
@@ -89,6 +118,24 @@
 		selectedTheme = theme;
 		document.documentElement.setAttribute('data-theme', theme);
 		save_theme_setting({ theme });
+	}
+
+	// Image Size
+	const imageSizeData = get_image_size_setting();
+	const imageSizeSetting = $derived(imageSizeData.current);
+	/** @type {'small' | 'medium' | 'large'} */
+	let selectedImageSize = $state('medium');
+
+	$effect(() => {
+		if (imageSizeSetting) {
+			selectedImageSize = imageSizeSetting.image_size;
+		}
+	});
+
+	/** @param {'small' | 'medium' | 'large'} size */
+	function setImageSize(size) {
+		selectedImageSize = size;
+		save_image_size_setting({ size });
 	}
 
 	// Customers
@@ -219,13 +266,7 @@
 
 <!-- Tab navigation -->
 <div class="flex gap-1.5 mb-4 overflow-x-auto">
-	{#each [
-		{ id: 'payment', label: 'Payment' },
-		{ id: 'rates', label: 'Rates' },
-		{ id: 'customers', label: 'Customers' },
-		{ id: 'ui', label: 'UI' },
-		{ id: 'data', label: 'Data' }
-	] as tab}
+	{#each [{ id: 'payment', label: 'Payment' }, { id: 'rates', label: 'Rates' }, { id: 'customers', label: 'Customers' }, { id: 'ui', label: 'UI' }, { id: 'data', label: 'Data' }] as tab}
 		<button
 			class="px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap
 				{activeTab === tab.id
@@ -371,7 +412,9 @@
 						</div>
 						<div class="flex gap-1 shrink-0">
 							<button class="btn btn-ghost btn-xs" onclick={() => openEdit(c)}>Edit</button>
-							<button class="btn btn-ghost btn-xs text-error" onclick={() => openDelete(c)}>Delete</button>
+							<button class="btn btn-ghost btn-xs text-error" onclick={() => openDelete(c)}
+								>Delete</button
+							>
 						</div>
 					</div>
 				</div>
@@ -400,7 +443,10 @@
 			</select>
 		</div>
 
-		<div class="mt-3 rounded-xl overflow-hidden border border-base-content/10" data-theme={selectedTheme}>
+		<div
+			class="mt-3 rounded-xl overflow-hidden border border-base-content/10"
+			data-theme={selectedTheme}
+		>
 			<div class="bg-base-100 p-3">
 				<div class="flex items-center justify-between mb-2.5">
 					<span class="text-base-content text-xs font-semibold">Preview</span>
@@ -436,6 +482,32 @@
 			</div>
 		</div>
 	</div>
+
+	<div class="rounded-xl border border-base-content/10 bg-base-100 p-4 mt-3">
+		<h2 class="text-sm font-semibold text-base-content/60 mb-3">Image Upload Size</h2>
+		<p class="text-[11px] text-base-content/40 mb-3">
+			Maximum resolution for uploaded images. Larger images will be resized.
+		</p>
+		<div class="flex flex-col gap-2">
+			{#each [{ value: 'small', label: 'Small', desc: '800px max' }, { value: 'medium', label: 'Medium', desc: '1200px max' }, { value: 'large', label: 'Large', desc: '1600px max' }] as option}
+				<label class="flex items-center gap-3 cursor-pointer">
+					<input
+						type="radio"
+						name="image-size"
+						class="radio radio-sm radio-primary"
+						value={option.value}
+						checked={selectedImageSize === option.value}
+						onchange={() =>
+							setImageSize(/** @type {'small' | 'medium' | 'large'} */ (option.value))}
+					/>
+					<div>
+						<span class="text-sm font-medium">{option.label}</span>
+						<span class="text-[11px] text-base-content/40 ml-1.5">{option.desc}</span>
+					</div>
+				</label>
+			{/each}
+		</div>
+	</div>
 {/if}
 
 <!-- Data -->
@@ -444,7 +516,8 @@
 		<div class="rounded-xl border border-base-content/10 bg-base-100 p-4">
 			<h2 class="text-sm font-semibold text-base-content/60 mb-1">Export</h2>
 			<p class="text-[11px] text-base-content/40 mb-3">
-				Download a backup of all your data including invoices, customers, timesheets, budget, and settings.
+				Download a backup of all your data including invoices, customers, timesheets, budget, and
+				settings.
 			</p>
 			<a href={resolve('/settings/export')} download class="btn btn-primary btn-sm">
 				<svg
@@ -469,11 +542,7 @@
 			<p class="text-[11px] text-base-content/40 mb-3">
 				Restore from a backup file. This will replace all existing data.
 			</p>
-			<button
-				class="btn btn-sm btn-outline"
-				onclick={() => fileInput.click()}
-				disabled={importing}
-			>
+			<button class="btn btn-sm btn-outline" onclick={() => fileInput.click()} disabled={importing}>
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
 					viewBox="0 0 20 20"

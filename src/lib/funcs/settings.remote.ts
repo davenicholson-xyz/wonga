@@ -103,3 +103,22 @@ export const save_payment_settings = command(
 		}
 	}
 );
+
+export const get_image_size_setting = query(async () => {
+	const row = await db.select().from(settings).where(eq(settings.key, 'image_size')).execute();
+	return {
+		image_size: (row[0]?.value as 'small' | 'medium' | 'large') ?? 'medium'
+	};
+});
+
+export const save_image_size_setting = command(
+	v.object({
+		size: v.picklist(['small', 'medium', 'large'])
+	}),
+	async ({ size }) => {
+		await db
+			.insert(settings)
+			.values({ key: 'image_size', value: size })
+			.onConflictDoUpdate({ target: settings.key, set: { value: size } });
+	}
+);
