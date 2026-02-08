@@ -98,13 +98,15 @@ export const send_invoice = command(v.number(), async (invoice_number) => {
 		return result[0]?.value;
 	};
 
-	const [payto, account, sort] = await Promise.all([
-		getSettingValue('invoice_payto'),
-		getSettingValue('invoice_account'),
-		getSettingValue('invoice_sort')
+	const [payto, account, sort, address, email] = await Promise.all([
+		getSettingValue('payment_name'),
+		getSettingValue('account_number'),
+		getSettingValue('sort_code'),
+		getSettingValue('address'),
+		getSettingValue('email')
 	]);
 
-	const pdfBuffer = await generateInvoicePdf(inv, { payto, account, sort });
+	const pdfBuffer = await generateInvoicePdf(inv, { payto, account, sort, address, email });
 
 	const attachments: { filename: string; content: Buffer; contentType: string }[] = [
 		{
