@@ -139,6 +139,7 @@ export const send_invoice = command(v.number(), async (invoice_number) => {
 	await transporter.sendMail({
 		from: env.SMTP_FROM,
 		to: inv.customer_email,
+		bcc: env.SMTP_FROM,
 		subject: `Invoice INV-${inv.invoice_number}`,
 		text: `Hi ${inv.customer_name},\n\nPlease find attached invoice INV-${inv.invoice_number}.\n\nThank you.`,
 		attachments
