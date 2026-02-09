@@ -82,8 +82,8 @@
 							viewBox="0 0 20 20"
 							fill="currentColor"
 							class="w-3 h-3 text-warning"
-							title="Emailed"
 						>
+							<title>Emailed</title>
 							<path
 								d="M3 4a2 2 0 0 0-2 2v1.161l8.441 4.221a1.25 1.25 0 0 0 1.118 0L19 7.162V6a2 2 0 0 0-2-2H3Z"
 							/>

@@ -32,7 +32,7 @@
 	let sending = $state(false);
 	let uploading = $state(false);
 	let rotating = $state(false);
-	let fileInput: HTMLInputElement;
+	let fileInput = $state<HTMLInputElement>();
 
 	let showTimesheetWarning = $state(false);
 	let showDeleteConfirm = $state(false);
@@ -203,7 +203,11 @@
 		>
 			<div class="flex items-center justify-between">
 				<div class="flex items-center gap-3">
-					<a href={resolve('/invoices')} class="btn btn-ghost btn-sm btn-square">
+					<a
+						href={resolve('/invoices')}
+						class="btn btn-ghost btn-sm btn-square"
+						aria-label="Back to invoices"
+					>
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
 							viewBox="0 0 20 20"
@@ -325,8 +329,13 @@
 			{#if editing}
 				<div class="p-5 text-sm space-y-3">
 					<div class="form-control">
-						<label class="label"><span class="label-text">Customer</span></label>
-						<select class="select select-bordered select-sm" bind:value={editCustomerId}>
+						<label class="label" for="edit-customer"><span class="label-text">Customer</span></label
+						>
+						<select
+							id="edit-customer"
+							class="select select-bordered select-sm"
+							bind:value={editCustomerId}
+						>
 							{#each customers as c (c.id)}
 								<option value={c.id}>{c.name}</option>
 							{/each}
@@ -334,16 +343,26 @@
 					</div>
 					<div class="flex gap-3">
 						<div class="form-control flex-1">
-							<label class="label"><span class="label-text">Invoice Date</span></label>
+							<label class="label" for="edit-invoice-date"
+								><span class="label-text">Invoice Date</span></label
+							>
 							<input
+								id="edit-invoice-date"
 								type="date"
 								class="input input-bordered input-sm"
 								bind:value={editInvoiceDate}
 							/>
 						</div>
 						<div class="form-control flex-1">
-							<label class="label"><span class="label-text">Due Date</span></label>
-							<input type="date" class="input input-bordered input-sm" bind:value={editDueDate} />
+							<label class="label" for="edit-due-date"
+								><span class="label-text">Due Date</span></label
+							>
+							<input
+								id="edit-due-date"
+								type="date"
+								class="input input-bordered input-sm"
+								bind:value={editDueDate}
+							/>
 						</div>
 					</div>
 
@@ -528,7 +547,7 @@
 				<div class="p-3 border-t border-base-content/5">
 					<button
 						class="btn btn-ghost btn-sm w-full text-base-content/40"
-						onclick={() => fileInput.click()}
+						onclick={() => fileInput?.click()}
 						disabled={uploading}
 					>
 						<svg
@@ -565,7 +584,7 @@
 					</div>
 					<button
 						class="btn btn-ghost btn-sm text-base-content/40"
-						onclick={() => fileInput.click()}
+						onclick={() => fileInput?.click()}
 						disabled={uploading}
 					>
 						{uploading ? 'Uploading...' : 'Upload Timesheet Image'}
@@ -608,7 +627,7 @@
 					? 'from-success/10 to-success/5 border border-success/20'
 					: 'from-warning/10 to-warning/5 border border-warning/20'} p-3 flex items-center gap-2.5 transition-all hover:shadow-md text-left"
 				onclick={emailInvoice}
-				disabled={sending || inv.emailed}
+				disabled={sending || !!inv.emailed}
 			>
 				<div
 					class="w-8 h-8 rounded-lg {inv.emailed
@@ -656,24 +675,47 @@
 				}}
 			>
 				<div class="form-control">
-					<label class="label"><span class="label-text">Name</span></label>
-					<input type="text" class="input input-bordered input-sm" bind:value={editItemName} />
+					<label class="label" for="edit-item-name"><span class="label-text">Name</span></label>
+					<input
+						id="edit-item-name"
+						type="text"
+						class="input input-bordered input-sm"
+						bind:value={editItemName}
+					/>
 				</div>
 				<div class="form-control mt-2">
-					<label class="label"><span class="label-text">Description</span></label>
-					<input type="text" class="input input-bordered input-sm" bind:value={editItemDesc} />
+					<label class="label" for="edit-item-desc"
+						><span class="label-text">Description</span></label
+					>
+					<input
+						id="edit-item-desc"
+						type="text"
+						class="input input-bordered input-sm"
+						bind:value={editItemDesc}
+					/>
 				</div>
 				<div class="flex gap-3 mt-2">
 					<div class="form-control grow">
-						<label class="label"><span class="label-text">Price</span></label>
-						<label class="input input-bordered input-sm flex items-center gap-1">
+						<label class="label" for="edit-item-price"><span class="label-text">Price</span></label>
+						<div class="input input-bordered input-sm flex items-center gap-1">
 							<span class="text-base-content/60">£</span>
-							<input type="number" class="grow bg-transparent w-full" bind:value={editItemPrice} />
-						</label>
+							<input
+								id="edit-item-price"
+								type="number"
+								class="grow bg-transparent w-full"
+								bind:value={editItemPrice}
+							/>
+						</div>
 					</div>
 					<div class="form-control grow">
-						<label class="label"><span class="label-text">Quantity</span></label>
-						<input type="number" class="input input-bordered input-sm" bind:value={editItemQty} />
+						<label class="label" for="edit-item-qty"><span class="label-text">Quantity</span></label
+						>
+						<input
+							id="edit-item-qty"
+							type="number"
+							class="input input-bordered input-sm"
+							bind:value={editItemQty}
+						/>
 					</div>
 				</div>
 				<div class="flex justify-between mt-5">
@@ -709,24 +751,46 @@
 				}}
 			>
 				<div class="form-control">
-					<label class="label"><span class="label-text">Name</span></label>
-					<input type="text" class="input input-bordered input-sm" bind:value={newItemName} />
+					<label class="label" for="new-item-name"><span class="label-text">Name</span></label>
+					<input
+						id="new-item-name"
+						type="text"
+						class="input input-bordered input-sm"
+						bind:value={newItemName}
+					/>
 				</div>
 				<div class="form-control mt-2">
-					<label class="label"><span class="label-text">Description</span></label>
-					<input type="text" class="input input-bordered input-sm" bind:value={newItemDesc} />
+					<label class="label" for="new-item-desc"
+						><span class="label-text">Description</span></label
+					>
+					<input
+						id="new-item-desc"
+						type="text"
+						class="input input-bordered input-sm"
+						bind:value={newItemDesc}
+					/>
 				</div>
 				<div class="flex gap-3 mt-2">
 					<div class="form-control grow">
-						<label class="label"><span class="label-text">Price</span></label>
-						<label class="input input-bordered input-sm flex items-center gap-1">
+						<label class="label" for="new-item-price"><span class="label-text">Price</span></label>
+						<div class="input input-bordered input-sm flex items-center gap-1">
 							<span class="text-base-content/60">£</span>
-							<input type="number" class="grow bg-transparent w-full" bind:value={newItemPrice} />
-						</label>
+							<input
+								id="new-item-price"
+								type="number"
+								class="grow bg-transparent w-full"
+								bind:value={newItemPrice}
+							/>
+						</div>
 					</div>
 					<div class="form-control grow">
-						<label class="label"><span class="label-text">Quantity</span></label>
-						<input type="number" class="input input-bordered input-sm" bind:value={newItemQty} />
+						<label class="label" for="new-item-qty"><span class="label-text">Quantity</span></label>
+						<input
+							id="new-item-qty"
+							type="number"
+							class="input input-bordered input-sm"
+							bind:value={newItemQty}
+						/>
 					</div>
 				</div>
 				<div class="flex justify-end gap-2 mt-5">

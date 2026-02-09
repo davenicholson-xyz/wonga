@@ -43,7 +43,7 @@ export const GET: RequestHandler = async ({ params }) => {
 
 	const pdfBuffer = await generateInvoicePdf(inv, { payto, account, sort, address, email });
 
-	return new Response(pdfBuffer, {
+	return new Response(new Uint8Array(pdfBuffer), {
 		headers: {
 			'Content-Type': 'application/pdf',
 			'Content-Disposition': `inline; filename="INV-${inv.invoice_number}.pdf"`

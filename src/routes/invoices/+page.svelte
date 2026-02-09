@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import { resolve } from '$app/paths';
 	import InvoiceCard from '$lib/components/invoice/InvoiceCard.svelte';
 	import { get_invoices } from '$lib/funcs/invoices.remote';
@@ -11,30 +11,38 @@
 	const invoices = $derived(data.current ?? []);
 
 	const grouped = $derived.by(() => {
-		const groups = new SvelteMap();
+		const groups = new SvelteMap<
+			string,
+			{ year: number; month: number; invoices: typeof invoices }
+		>();
 		for (const inv of invoices) {
 			const d = new Date(inv.due_date);
 			const key = `${d.getFullYear()}-${d.getMonth() + 1}`;
 			if (!groups.has(key)) {
 				groups.set(key, { year: d.getFullYear(), month: d.getMonth() + 1, invoices: [] });
 			}
-			groups.get(key).invoices.push(inv);
+			groups.get(key)!.invoices.push(inv);
 		}
 		return [...groups.values()].sort((a, b) =>
 			b.year !== a.year ? b.year - a.year : b.month - a.month
 		);
 	});
 
-	const monthName = (month, year) =>
+	const monthName = (month: number, year: number) =>
 		new Date(year, month - 1).toLocaleString('en-GB', { month: 'long', year: 'numeric' });
 
 	let modal_open = $state(false);
 	let modal_year = $state(0);
 	let modal_month = $state(0);
 	let modal_tax = $state(20);
-	let modal_income = $state(null);
+	let modal_income: { refresh: () => void } | null = $state(null);
 
-	function openTaxModal(year, month, tax_percent, income) {
+	function openTaxModal(
+		year: number,
+		month: number,
+		tax_percent: number,
+		income: { refresh: () => void }
+	) {
 		modal_year = year;
 		modal_month = month;
 		modal_tax = tax_percent;
@@ -45,7 +53,7 @@
 	async function saveTax() {
 		const key = `tax_percent_${modal_year}_${modal_month}`;
 		await set_settings({ key, value: modal_tax.toString() });
-		modal_income.refresh();
+		modal_income?.refresh();
 		modal_open = false;
 	}
 </script>
@@ -173,5 +181,5 @@
 			<button class="btn btn-primary btn-sm" onclick={saveTax}>Save</button>
 		</div>
 	</div>
-	<div class="modal-backdrop" onclick={() => (modal_open = false)}></div>
+	<button class="modal-backdrop" onclick={() => (modal_open = false)}>close</button>
 </div>

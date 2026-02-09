@@ -205,11 +205,12 @@
 	let importError = $state('');
 	let importSuccess = $state(false);
 	let showImportConfirm = $state(false);
-	/** @type {HTMLInputElement} */
-	let fileInput;
+	/** @type {HTMLInputElement | undefined} */
+	let fileInput = $state();
 	/** @type {any} */
 	let pendingImportData = $state(null);
 
+	/** @param {Event} e */
 	function handleFileSelect(e) {
 		const input = /** @type {HTMLInputElement} */ (e.target);
 		const file = input.files?.[0];
@@ -428,9 +429,9 @@
 	<div class="rounded-xl border border-base-content/10 bg-base-100 p-4">
 		<h2 class="text-sm font-semibold text-base-content/60 mb-3">Appearance</h2>
 		<div class="form-control">
-			<label class="label">
+			<span class="label">
 				<span class="label-text text-xs">Colour Theme</span>
-			</label>
+			</span>
 			<div class="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto pr-1">
 				{#each themes as theme}
 					<button
@@ -532,7 +533,11 @@
 			<p class="text-[11px] text-base-content/40 mb-3">
 				Restore from a backup file. This will replace all existing data.
 			</p>
-			<button class="btn btn-sm btn-outline" onclick={() => fileInput.click()} disabled={importing}>
+			<button
+				class="btn btn-sm btn-outline"
+				onclick={() => fileInput?.click()}
+				disabled={importing}
+			>
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
 					viewBox="0 0 20 20"

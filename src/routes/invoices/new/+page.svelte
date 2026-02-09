@@ -35,7 +35,11 @@
 		class="rounded-xl p-4 bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20"
 	>
 		<div class="flex items-center gap-3">
-			<a href={resolve('/invoices')} class="btn btn-ghost btn-sm btn-square">
+			<a
+				href={resolve('/invoices')}
+				class="btn btn-ghost btn-sm btn-square"
+				aria-label="Back to invoices"
+			>
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
 					viewBox="0 0 20 20"

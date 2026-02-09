@@ -23,11 +23,11 @@
 </script>
 
 <div>
-	<label class="label">
+	<label class="label" for="customer-select">
 		<span class="label-text">Customer</span>
 	</label>
 	<div class="flex gap-2">
-		<select class="select select-bordered select-sm grow" bind:value>
+		<select id="customer-select" class="select select-bordered select-sm grow" bind:value>
 			{#each await get_customers() as customer (customer.id)}
 				<option value={customer.id}>{customer.name}</option>
 			{/each}
