@@ -53,7 +53,7 @@ export async function GET() {
 		const dtend = formatICalDate(shift.date, shift.end_time);
 		const isDay = shift.start_time === '06:00';
 		const shiftType = isDay ? 'Day Shift' : 'Back Shift';
-		const shiftEmoji = isDay ? '☀️' : '🥱';
+		const shiftEmoji = isDay ? '☀️' : '💩';
 		const color = isDay ? 'goldenrod' : 'steelblue';
 
 		return [
