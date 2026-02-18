@@ -53,6 +53,7 @@ export async function GET() {
 		const dtend = formatICalDate(shift.date, shift.end_time);
 		const isDay = shift.start_time === '06:00';
 		const shiftType = isDay ? 'Day Shift' : 'Back Shift';
+		const shiftEmoji = isDay ? '☀️' : '🥱';
 		const color = isDay ? 'goldenrod' : 'steelblue';
 
 		return [
@@ -61,7 +62,7 @@ export async function GET() {
 			`DTSTAMP:${dtstamp}`,
 			`DTSTART;TZID=Europe/London:${dtstart}`,
 			`DTEND;TZID=Europe/London:${dtend}`,
-			`SUMMARY:${escapeICalText(shift.location)} - ${escapeICalText(shiftType)}`,
+			`SUMMARY:${shiftEmoji} ${escapeICalText(shift.location)}`,
 			`LOCATION:${escapeICalText(shift.location)}`,
 			`CATEGORIES:${escapeICalText(shiftType)}`,
 			`COLOR:${color}`,
