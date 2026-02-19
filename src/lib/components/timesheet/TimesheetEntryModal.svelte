@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { edit_timesheet, delete_timesheet } from '$lib/funcs/timesheet.remote';
+	import { get_shift_patterns } from '$lib/funcs/shift_patterns.remote';
 
 	type Entry = {
 		id: string;
@@ -9,6 +10,18 @@
 		end_time: string;
 		unavailable: boolean | null;
 	};
+
+	const BTN_COLOR_CLASSES = {
+		primary: 'btn-primary',
+		secondary: 'btn-secondary',
+		success: 'btn-success',
+		error: 'btn-error',
+		warning: 'btn-warning',
+		info: 'btn-info'
+	};
+
+	const shiftsData = get_shift_patterns();
+	const patterns = $derived(shiftsData.current ?? []);
 
 	let showModal = $state(false);
 
@@ -32,16 +45,6 @@
 	async function handleDelete() {
 		await delete_timesheet({ date });
 		showModal = false;
-	}
-
-	function setDayShift() {
-		startTime = '06:00';
-		endTime = '16:00';
-	}
-
-	function setBackShift() {
-		startTime = '12:00';
-		endTime = '22:00';
 	}
 </script>
 
@@ -88,16 +91,27 @@
 						bind:value={location}
 					/>
 				</div>
-				<div class="flex gap-2 mt-3">
-					<button
-						type="button"
-						class="btn btn-outline btn-warning btn-sm grow"
-						onclick={setDayShift}>Day Shift</button
-					>
-					<button type="button" class="btn btn-outline btn-info btn-sm grow" onclick={setBackShift}
-						>Back Shift</button
-					>
-				</div>
+				{#if patterns.length > 0}
+					<div class="flex flex-wrap gap-2 mt-3">
+						{#each patterns as p (p.id)}
+							{@const colorClass =
+								BTN_COLOR_CLASSES[
+									p.color as 'primary' | 'secondary' | 'success' | 'error' | 'warning' | 'info'
+								] ?? 'btn-primary'}
+							<button
+								type="button"
+								class="btn btn-outline btn-sm grow {colorClass}"
+								onclick={() => {
+									startTime = p.start_time;
+									endTime = p.end_time;
+								}}
+							>
+								{#if p.icon}<span>{p.icon}</span>{/if}
+								<span class="truncate max-w-24">{p.title}</span>
+							</button>
+						{/each}
+					</div>
+				{/if}
 				<div class="flex gap-3 mt-2">
 					<div class="form-control grow">
 						<label class="label" for="startTime">

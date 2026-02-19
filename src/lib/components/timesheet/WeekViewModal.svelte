@@ -27,7 +27,14 @@
 	function entryHours(entry: Entry) {
 		const [sh, sm] = entry.start_time.split(':').map(Number);
 		const [eh, em] = entry.end_time.split(':').map(Number);
-		return eh + em / 60 - (sh + sm / 60);
+		const startHours = sh + sm / 60;
+		const endHours = eh + em / 60;
+
+		// If end time is before start time, shift crosses midnight
+		const duration = endHours < startHours ? 24 + endHours - startHours : endHours - startHours;
+
+		// Cap at 24 hours maximum
+		return Math.min(duration, 24);
 	}
 
 	function totalHours(entries: Day[]) {

@@ -112,7 +112,15 @@
 	function parseHours(start: string, end: string): number {
 		const [sh, sm] = start.split(':').map(Number);
 		const [eh, em] = end.split(':').map(Number);
-		return (eh * 60 + em - (sh * 60 + sm)) / 60;
+		const startMinutes = sh * 60 + sm;
+		const endMinutes = eh * 60 + em;
+
+		// If end time is before start time, shift crosses midnight
+		const duration =
+			endMinutes < startMinutes ? 24 * 60 + endMinutes - startMinutes : endMinutes - startMinutes;
+
+		// Cap at 24 hours (1440 minutes) maximum
+		return Math.min(duration / 60, 24);
 	}
 
 	const totalShifts = $derived(entries.length);
