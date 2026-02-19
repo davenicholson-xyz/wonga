@@ -3,10 +3,27 @@
 
 	import { page } from '$app/state';
 	import { get_timesheet_for_month } from '$lib/funcs/timesheet.remote';
+	import { get_shift_patterns } from '$lib/funcs/shift_patterns.remote';
 	import { SvelteDate } from 'svelte/reactivity';
 
 	const year = $derived(parseInt(page.params.year as string));
 	const month = $derived(parseInt(page.params.month as string));
+
+	const DOT_BG_CLASSES = {
+		primary: 'bg-primary',
+		secondary: 'bg-secondary',
+		success: 'bg-success',
+		error: 'bg-error',
+		warning: 'bg-warning',
+		info: 'bg-info'
+	};
+
+	const shiftsData = get_shift_patterns();
+	const patterns = $derived(shiftsData.current ?? []);
+
+	const patternByTime = $derived(
+		new Map(patterns.map((p) => [`${p.start_time}-${p.end_time}`, p.color]))
+	);
 
 	const tmonth = $derived(get_timesheet_for_month(`${year}-${month}-1`));
 	const entries = $derived(tmonth.current ?? []);
@@ -94,6 +111,20 @@
 	const currentWeek = getISOWeekNumber(today);
 
 	const modals = getTimeSheetModalControls();
+
+	function dotClass(entry?: Entry): string {
+		if (!entry) return 'invisible';
+		const key = `${entry.start_time}-${entry.end_time}`;
+		const color = patternByTime.get(key) as
+			| 'primary'
+			| 'secondary'
+			| 'success'
+			| 'error'
+			| 'warning'
+			| 'info'
+			| undefined;
+		return color ? (DOT_BG_CLASSES[color] ?? 'bg-base-content/30') : 'bg-base-content/30';
+	}
 </script>
 
 <div class="grid grid-cols-[2rem_repeat(7,1fr)] gap-x-1 gap-y-1 py-4">
@@ -156,12 +187,7 @@
 							/>
 						</svg>
 					{:else}
-						<span
-							class="w-1.5 h-1.5 rounded-full"
-							class:bg-warning={cell.entry?.start_time === '06:00'}
-							class:bg-info={cell.entry && cell.entry.start_time !== '06:00'}
-							class:invisible={!cell.entry}
-						></span>
+						<span class="w-1.5 h-1.5 rounded-full {dotClass(cell.entry)}"></span>
 					{/if}
 				</span>
 			</button>

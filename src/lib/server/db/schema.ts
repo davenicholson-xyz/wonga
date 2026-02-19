@@ -69,3 +69,15 @@ export const timesheet = sqliteTable('timesheet', {
 	end_time: text('end_time').notNull(),
 	unavailable: integer('unavailable', { mode: 'boolean' }).default(false)
 });
+
+export const shift_pattern = sqliteTable('shift_pattern', {
+	id: text('id')
+		.primaryKey()
+		.$defaultFn(() => crypto.randomUUID()),
+	title: text('title').notNull(),
+	start_time: text('start_time').notNull(),
+	end_time: text('end_time').notNull(),
+	color: text('color').notNull().default('primary'), // DaisyUI token: primary|secondary|success|error|warning|info
+	icon: text('icon'), // optional emoji/character
+	sort_order: integer('sort_order').notNull().default(0)
+});
