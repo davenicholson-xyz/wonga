@@ -38,6 +38,15 @@
 		Shifts
 	</a>
 	<a
+		href={resolve('/settings/invoices')}
+		class="px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap
+			{pathname.startsWith('/settings/invoices')
+			? 'bg-primary text-primary-content'
+			: 'bg-base-content/5 text-base-content/50 hover:text-base-content/70'}"
+	>
+		Invoices
+	</a>
+	<a
 		href={resolve('/settings/ui')}
 		class="px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap
 			{pathname.startsWith('/settings/ui')

@@ -21,6 +21,7 @@ export const invoice = sqliteTable('invoice', {
 	total: integer('total').notNull(),
 	paid: integer('paid').notNull().default(0),
 	emailed: integer('emailed').notNull().default(0),
+	auto_send: integer('auto_send').notNull().default(0),
 	timesheet_image: text('timesheet_image')
 });
 

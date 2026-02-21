@@ -6,9 +6,11 @@
 	import DateSelect from '$lib/components/invoice/DateSelect.svelte';
 	import InvoiceItems from '$lib/components/invoice/InvoiceItems.svelte';
 	import InvoiceNumber from '$lib/components/invoice/InvoiceNumber.svelte';
-	import { get_rate_settings } from '$lib/funcs/settings.remote';
+	import { get_rate_settings, get_auto_send_settings } from '$lib/funcs/settings.remote';
 
 	const rateData = get_rate_settings();
+	const autoSendData = get_auto_send_settings();
+	const autoSendEnabled = $derived(autoSendData.current?.enabled ?? false);
 	const defaultPrice = $derived(rateData.current?.hourly_rate ?? 30);
 
 	let invoiceNumber = $state<number>(0);
@@ -17,6 +19,9 @@
 	let dueDate = $state<string>('');
 	let items = $state<string>('');
 	let itemsTotal = $state(0);
+	let autoSend = $state(0);
+
+	const isFutureDate = $derived(invoiceDate ? new Date(invoiceDate) > new Date() : false);
 
 	const initialItems = $derived.by(() => {
 		const raw = page.url.searchParams.get('items');
@@ -83,6 +88,28 @@
 			<InvoiceItems bind:value={items} bind:total={itemsTotal} {initialItems} {defaultPrice} />
 		</div>
 	</div>
+
+	{#if autoSendEnabled && isFutureDate}
+		<div class="rounded-xl border border-base-content/10 bg-base-100 overflow-hidden p-4">
+			<label class="flex items-center justify-between cursor-pointer">
+				<div class="flex items-center gap-2">
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 text-info">
+						<path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-13a.75.75 0 0 0-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 0 0 0-1.5h-3.25V5Z" clip-rule="evenodd" />
+					</svg>
+					<div>
+						<span class="text-sm font-medium">Auto-send on invoice date</span>
+						<p class="text-[11px] text-base-content/40">Automatically email this invoice when the date arrives</p>
+					</div>
+				</div>
+				<input
+					type="checkbox"
+					class="toggle toggle-sm toggle-info"
+					checked={autoSend === 1}
+					onchange={() => (autoSend = autoSend ? 0 : 1)}
+				/>
+			</label>
+		</div>
+	{/if}
 </div>
 
 <form {...create_invoice} class="fixed bottom-16 left-0 w-full px-4 pb-2 mb-2">
@@ -93,6 +120,7 @@
 		<input {...create_invoice.fields.due_date.as('text')} bind:value={dueDate} />
 		<input {...create_invoice.fields.items.as('text')} bind:value={items} />
 		<input {...create_invoice.fields.total.as('number')} bind:value={itemsTotal} />
+		<input {...create_invoice.fields.auto_send.as('number')} bind:value={autoSend} />
 	</div>
 
 	<button type="submit" class="btn btn-primary btn-sm w-full">Create Invoice</button>

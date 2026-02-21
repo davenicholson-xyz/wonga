@@ -4,6 +4,40 @@ import { eq, inArray } from 'drizzle-orm';
 import { settings } from '$lib/server/db/schema';
 import * as v from 'valibot';
 
+export const get_auto_send_settings = query(async () => {
+	const keys = ['auto_send_enabled', 'auto_send_time', 'auto_send_require_timesheet'];
+	const rows = await db.select().from(settings).where(inArray(settings.key, keys)).execute();
+	const map: Record<string, string> = {};
+	for (const row of rows) map[row.key] = row.value;
+	return {
+		enabled: map['auto_send_enabled'] === '1',
+		time: map['auto_send_time'] ?? '09:00',
+		require_timesheet: map['auto_send_require_timesheet'] === '1'
+	};
+});
+
+export const save_auto_send_settings = command(
+	v.object({
+		enabled: v.boolean(),
+		time: v.string(),
+		require_timesheet: v.boolean()
+	}),
+	async ({ enabled, time, require_timesheet }) => {
+		const entries = [
+			{ key: 'auto_send_enabled', value: enabled ? '1' : '0' },
+			{ key: 'auto_send_time', value: time },
+			{ key: 'auto_send_require_timesheet', value: require_timesheet ? '1' : '0' }
+		];
+		for (const { key, value } of entries) {
+			await db
+				.insert(settings)
+				.values({ key, value })
+				.onConflictDoUpdate({ target: settings.key, set: { value } });
+		}
+		get_auto_send_settings().refresh();
+	}
+);
+
 export const set_settings = command(
 	v.object({
 		key: v.string(),

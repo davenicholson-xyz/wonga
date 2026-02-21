@@ -7,7 +7,8 @@
 		mark_paid,
 		send_invoice,
 		update_invoice,
-		delete_invoice
+		delete_invoice,
+		toggle_auto_send
 	} from '$lib/funcs/invoices.remote';
 	import { get_customers } from '$lib/funcs/customers.remote';
 	const { number } = page.params as { number: string };
@@ -256,6 +257,19 @@
 										/>
 									</svg>
 									<span class="text-[11px] text-warning">Sent</span>
+								</div>
+							{/if}
+							{#if inv.auto_send && !inv.emailed}
+								<div class="flex items-center gap-1">
+									<svg
+										xmlns="http://www.w3.org/2000/svg"
+										viewBox="0 0 20 20"
+										fill="currentColor"
+										class="w-3 h-3 text-info"
+									>
+										<path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-13a.75.75 0 0 0-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 0 0 0-1.5h-3.25V5Z" clip-rule="evenodd" />
+									</svg>
+									<span class="text-[11px] text-info">Auto-send</span>
 								</div>
 							{/if}
 						</div>
@@ -599,6 +613,29 @@
 				onchange={uploadTimesheet}
 			/>
 		</div>
+
+		<!-- Auto-send toggle -->
+		{#if !inv.emailed}
+			<div class="rounded-xl border border-base-content/10 bg-base-100 p-4">
+				<label class="flex items-center justify-between cursor-pointer">
+					<div class="flex items-center gap-2">
+						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 text-info">
+							<path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-13a.75.75 0 0 0-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 0 0 0-1.5h-3.25V5Z" clip-rule="evenodd" />
+						</svg>
+						<div>
+							<span class="text-sm font-medium">Auto-send</span>
+							<p class="text-[11px] text-base-content/40">Automatically email when invoice date arrives</p>
+						</div>
+					</div>
+					<input
+						type="checkbox"
+						class="toggle toggle-sm toggle-info"
+						checked={!!inv.auto_send}
+						onchange={() => toggle_auto_send({ id: inv.id, invoice_number: inv.invoice_number, auto_send: inv.auto_send })}
+					/>
+				</label>
+			</div>
+		{/if}
 
 		<!-- Actions -->
 		<div class="grid grid-cols-2 gap-2">
