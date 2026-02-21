@@ -1,12 +1,56 @@
 <script lang="ts">
 	import { formatCurrency } from '$lib/helpers';
 
-	const { net, outgoing, bills_pot = $bindable(0) } = $props();
+	const {
+		net,
+		outgoing,
+		bills_pot = $bindable(0),
+		selected_month,
+		selected_year,
+		default_month,
+		default_year,
+		available_months = [],
+		on_month_change
+	}: {
+		net: number;
+		outgoing: number;
+		bills_pot: number;
+		selected_month: number;
+		selected_year: number;
+		default_month: number;
+		default_year: number;
+		available_months: { month: number; year: number }[];
+		on_month_change: (month: number, year: number) => void;
+	} = $props();
 
 	const remaining = $derived(net - outgoing);
 	let expanded = $state(false);
+	let month_picker_open = $state(false);
+
+	const is_default = $derived(
+		selected_month === default_month && selected_year === default_year
+	);
+
+	const income_label = $derived(
+		new Date(selected_year, selected_month).toLocaleDateString('en-GB', {
+			month: 'long',
+			year: 'numeric'
+		})
+	);
 
 	const spentPercent = $derived(net > 0 ? Math.min((outgoing / net) * 100, 100) : 0);
+
+	function select_month(month: number, year: number) {
+		on_month_change(month, year);
+		month_picker_open = false;
+	}
+
+	function format_income_month(month: number, year: number) {
+		return new Date(year, month).toLocaleDateString('en-GB', {
+			month: 'long',
+			year: 'numeric'
+		});
+	}
 </script>
 
 <div
@@ -18,30 +62,71 @@
 >
 	<div class="p-4">
 		<div class="grid grid-cols-2 gap-3">
-			<div class="rounded-xl bg-gradient-to-br from-info/10 to-info/5 border border-info/20 p-2.5">
-				<div class="flex items-center gap-1.5 mb-1">
-					<div class="w-6 h-6 rounded-md bg-info/20 flex items-center justify-center">
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							viewBox="0 0 20 20"
-							fill="currentColor"
-							class="w-3.5 h-3.5 text-info"
+			<div class="relative">
+				<div
+					class="rounded-xl bg-gradient-to-br {is_default
+						? 'from-info/10 to-info/5 border border-info/20'
+						: 'from-warning/10 to-warning/5 border border-warning/20'} p-2.5 cursor-pointer"
+					onclick={(e) => {
+						e.stopPropagation();
+						month_picker_open = !month_picker_open;
+					}}
+					onkeydown={(e) => {
+						if (e.key === 'Enter') {
+							e.stopPropagation();
+							month_picker_open = !month_picker_open;
+						}
+					}}
+					role="button"
+					tabindex="0"
+				>
+					<div class="flex items-center gap-1.5 mb-1">
+						<div
+							class="w-6 h-6 rounded-md {is_default
+								? 'bg-info/20'
+								: 'bg-warning/20'} flex items-center justify-center"
 						>
-							<path
-								fill-rule="evenodd"
-								d="M1 4a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4Zm12 1a3 3 0 1 1-6 0 3 3 0 0 1 6 0ZM2 15.5a.5.5 0 0 1 .5-.5h15a.5.5 0 0 1 0 1h-15a.5.5 0 0 1-.5-.5ZM2 17.5a.5.5 0 0 1 .5-.5h15a.5.5 0 0 1 0 1h-15a.5.5 0 0 1-.5-.5Z"
-								clip-rule="evenodd"
-							/>
-						</svg>
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								viewBox="0 0 20 20"
+								fill="currentColor"
+								class="w-3.5 h-3.5 {is_default ? 'text-info' : 'text-warning'}"
+							>
+								<path
+									fill-rule="evenodd"
+									d="M1 4a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4Zm12 1a3 3 0 1 1-6 0 3 3 0 0 1 6 0ZM2 15.5a.5.5 0 0 1 .5-.5h15a.5.5 0 0 1 0 1h-15a.5.5 0 0 1-.5-.5ZM2 17.5a.5.5 0 0 1 .5-.5h15a.5.5 0 0 1 0 1h-15a.5.5 0 0 1-.5-.5Z"
+									clip-rule="evenodd"
+								/>
+							</svg>
+						</div>
+						<span class="text-[10px] font-medium text-base-content/50">
+							{income_label} Income
+						</span>
 					</div>
-					<span class="text-[10px] font-medium text-base-content/50">
-						{new Date(new Date().getFullYear(), new Date().getMonth() + 1).toLocaleDateString(
-							'en-GB',
-							{ month: 'long' }
-						)} Income
-					</span>
+					<div class="text-lg font-bold">{formatCurrency(net)}</div>
 				</div>
-				<div class="text-lg font-bold">{formatCurrency(net)}</div>
+
+				{#if month_picker_open}
+					<ul
+						class="absolute z-50 mt-1 left-0 menu bg-base-200 rounded-xl shadow-lg w-56 max-h-48 overflow-y-auto p-1"
+					>
+						{#each available_months as m}
+							<li>
+								<button
+									class="text-xs {m.month === selected_month && m.year === selected_year
+										? 'active'
+										: ''}"
+									onclick={(e) => {
+										e.stopPropagation();
+										select_month(m.month, m.year);
+									}}
+								>
+									{format_income_month(m.month, m.year)}
+								</button>
+							</li>
+						{/each}
+					</ul>
+				{/if}
 			</div>
 			<div
 				class="rounded-xl bg-gradient-to-br {remaining >= 0

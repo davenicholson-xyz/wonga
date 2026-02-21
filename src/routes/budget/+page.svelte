@@ -7,15 +7,20 @@
 	import EditExpenseModal from '$lib/components/budget/EditExpenseModal.svelte';
 
 	import { get_categories_with_expenses } from '$lib/funcs/budget.remote';
-	import { get_income_for } from '$lib/funcs/income.remote';
+	import { get_income_for, get_income_months } from '$lib/funcs/income.remote';
 
 	import { setBudgetModalControls } from '$lib/context/budget.svelte';
 
 	const now = new Date();
-	const current_month = now.getMonth() + 1;
-	const current_year = now.getFullYear();
+	const default_month = now.getMonth() + 1;
+	const default_year = now.getFullYear();
 
-	const income_data = get_income_for({ month: current_month, year: current_year });
+	let selected_month = $state(default_month);
+	let selected_year = $state(default_year);
+
+	const income_data = $derived(get_income_for({ month: selected_month, year: selected_year }));
+	const income_months_data = get_income_months();
+	const available_months = $derived(income_months_data.current ?? []);
 
 	const net = $derived(income_data.current?.net ?? 0);
 
@@ -55,7 +60,20 @@
 </script>
 
 <div class="mx-4 mt-2">
-	<BudgetStats {net} {outgoing} {bills_pot} />
+	<BudgetStats
+		{net}
+		{outgoing}
+		{bills_pot}
+		{selected_month}
+		{selected_year}
+		{default_month}
+		{default_year}
+		{available_months}
+		on_month_change={(m, y) => {
+			selected_month = m;
+			selected_year = y;
+		}}
+	/>
 
 	{#each categories as category (category.id)}
 		<CagtegoryView {category} />

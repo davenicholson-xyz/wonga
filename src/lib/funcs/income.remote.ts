@@ -22,6 +22,23 @@ export const get_invoice_for_month = query(
 	}
 );
 
+export const get_income_months = query(async () => {
+	const invoices = await db.select({ due_date: invoice.due_date }).from(invoice);
+	const seen = new Set<string>();
+	const months: { month: number; year: number }[] = [];
+	for (const inv of invoices) {
+		const d = inv.due_date;
+		const m = d.getMonth() + 1;
+		const y = d.getFullYear();
+		const key = `${y}-${m}`;
+		if (!seen.has(key)) {
+			seen.add(key);
+			months.push({ month: m, year: y });
+		}
+	}
+	return months.sort((a, b) => a.year - b.year || a.month - b.month);
+});
+
 export const get_income_for = query(
 	v.object({ month: v.number(), year: v.number() }),
 	async ({ month, year }) => {
