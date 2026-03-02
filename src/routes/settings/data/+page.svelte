@@ -45,7 +45,7 @@
 					showImportConfirm = true;
 				}
 			} catch {
-				importError = 'Could not parse file. Make sure it is a valid Wonga backup.';
+				importError = 'Could not parse file. Make sure it is a valid Shyft backup.';
 			}
 			input.value = '';
 		};

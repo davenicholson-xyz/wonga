@@ -90,7 +90,7 @@ export async function GET() {
 
 		return [
 			'BEGIN:VEVENT',
-			`UID:${shift.id}@wonga`,
+			`UID:${shift.id}@shyft`,
 			`DTSTAMP:${dtstamp}`,
 			`DTSTART;TZID=Europe/London:${dtstart}`,
 			`DTEND;TZID=Europe/London:${dtend}`,
@@ -105,10 +105,10 @@ export async function GET() {
 	const calendar = [
 		'BEGIN:VCALENDAR',
 		'VERSION:2.0',
-		'PRODID:-//Wonga//Shift Calendar//EN',
+		'PRODID:-//Shyft//Shift Calendar//EN',
 		'CALSCALE:GREGORIAN',
 		'METHOD:PUBLISH',
-		'X-WR-CALNAME:Wonga Shifts',
+		'X-WR-CALNAME:Shyft Shifts',
 		'X-WR-TIMEZONE:Europe/London',
 		VTIMEZONE,
 		...events,

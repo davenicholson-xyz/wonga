@@ -17,7 +17,7 @@ No test framework is configured.
 
 ## Architecture
 
-**Wonga** is a freelancer finance app (invoicing, income tracking, budgeting, timesheets) built with SvelteKit, Svelte 5, and SQLite.
+**Shyft** is a freelancer finance app (invoicing, income tracking, budgeting, timesheets) built with SvelteKit, Svelte 5, and SQLite.
 
 ### Remote Functions (`src/lib/funcs/*.remote.ts`)
 

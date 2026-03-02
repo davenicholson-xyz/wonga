@@ -18,7 +18,7 @@ export async function GET() {
 	return new Response(JSON.stringify(data, null, 2), {
 		headers: {
 			'Content-Type': 'application/json',
-			'Content-Disposition': `attachment; filename="wonga-backup-${new Date().toISOString().split('T')[0]}.json"`
+			'Content-Disposition': `attachment; filename="shyft-backup-${new Date().toISOString().split('T')[0]}.json"`
 		}
 	});
 }
