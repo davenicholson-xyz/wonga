@@ -20,6 +20,7 @@ RUN chmod +x docker-entrypoint.sh
 
 ENV NODE_ENV=production
 ENV PORT=3000
+# ORIGIN must be set at runtime for SvelteKit CSRF protection (e.g. -e ORIGIN=https://shyft.bodgelab.net)
 EXPOSE 3000
 
 ENTRYPOINT ["./docker-entrypoint.sh"]
