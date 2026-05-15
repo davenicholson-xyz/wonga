@@ -206,6 +206,7 @@
 					<input
 						id="itemQuantity"
 						type="number"
+						step="any"
 						class="input input-bordered input-sm"
 						bind:value={itemQuantity}
 					/>
@@ -280,6 +281,7 @@
 					<input
 						id="editQuantity"
 						type="number"
+						step="any"
 						class="input input-bordered input-sm"
 						bind:value={editQuantity}
 					/>
