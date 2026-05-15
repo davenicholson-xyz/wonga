@@ -8,14 +8,31 @@
 	let days = $state<Day[]>([]);
 	let weekNumber = $state(0);
 
-	const weekdays = $derived(
-		days.filter((d) => d.entry && !d.entry.unavailable && d.dayOfWeek >= 1 && d.dayOfWeek <= 5)
-	);
-	const weekends = $derived(
-		days.filter((d) => d.entry && !d.entry.unavailable && (d.dayOfWeek === 0 || d.dayOfWeek === 6))
-	);
 	const allWithEntries = $derived(days.filter((d) => d.entry && !d.entry.unavailable));
-	const weekTotalHours = $derived(totalHours(allWithEntries));
+	let selectedDates = $state(new Set<string>());
+	const selected = $derived(allWithEntries.filter((d) => selectedDates.has(d.date)));
+
+	const locations = $derived([...new Set(selected.map((d) => d.entry!.location))]);
+	let selectedLocation = $state<string | null>(null);
+
+	const filtered = $derived(
+		selectedLocation
+			? selected.filter((d) => d.entry!.location === selectedLocation)
+			: selected
+	);
+	const weekdays = $derived(filtered.filter((d) => d.dayOfWeek >= 1 && d.dayOfWeek <= 5));
+	const weekends = $derived(filtered.filter((d) => d.dayOfWeek === 0 || d.dayOfWeek === 6));
+	const weekTotalHours = $derived(totalHours(filtered));
+
+	function toggleDay(date: string) {
+		const next = new Set(selectedDates);
+		if (next.has(date)) {
+			next.delete(date);
+		} else {
+			next.add(date);
+		}
+		selectedDates = next;
+	}
 
 	const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -45,29 +62,50 @@
 	}
 
 	function generateInvoice() {
-		const items: { name: string; description: string; quantity: number }[] = [];
-
-		if (weekdays.length > 0) {
-			const hours = totalHours(weekdays);
-			const location = weekdays[0].entry?.location ?? '';
-			items.push({ name: location, description: 'Weekdays', quantity: hours });
+		if (locations.length > 1 && !selectedLocation) {
+			showLocationPicker = true;
+			return;
 		}
 
-		if (weekends.length > 0) {
-			const hours = totalHours(weekends);
-			const location = weekends[0].entry?.location ?? '';
-			items.push({ name: location, description: 'Weekend', quantity: hours });
+		const items: { name: string; description: string; quantity: number }[] = [];
+		const location = filtered[0]?.entry?.location ?? '';
+
+		if (splitWeekends) {
+			if (weekdays.length > 0) {
+				items.push({ name: location, description: 'Weekdays', quantity: totalHours(weekdays) });
+			}
+			if (weekends.length > 0) {
+				items.push({ name: location, description: 'Weekend', quantity: totalHours(weekends) });
+			}
+		} else {
+			items.push({ name: location, description: '', quantity: weekTotalHours });
 		}
 
 		const url = new URL(resolve('/invoices/new'), window.location.origin);
 		url.searchParams.set('items', JSON.stringify(items));
 		showModal = false;
+		showLocationPicker = false;
+		selectedLocation = null;
 		window.location.href = url.toString();
+	}
+
+	let splitWeekends = $state(true);
+	let showLocationPicker = $state(false);
+
+	function selectLocation(location: string) {
+		selectedLocation = location;
+		showLocationPicker = false;
+		generateInvoice();
 	}
 
 	export function show(weekDays: Day[], week: number) {
 		days = weekDays;
 		weekNumber = week;
+		selectedDates = new Set(
+			weekDays.filter((d) => d.entry && !d.entry.unavailable).map((d) => d.date)
+		);
+		selectedLocation = null;
+		showLocationPicker = false;
 		showModal = true;
 	}
 </script>
@@ -93,7 +131,7 @@
 			</div>
 			{#if allWithEntries.length > 0}
 				<div class="flex items-center gap-2 mt-2 text-xs text-base-content/40">
-					<span>{allWithEntries.length} shift{allWithEntries.length !== 1 ? 's' : ''}</span>
+					<span>{selected.length} shift{selected.length !== 1 ? 's' : ''}</span>
 					<span>·</span>
 					<span>{weekdays.length} weekday{weekdays.length !== 1 ? 's' : ''}</span>
 					{#if weekends.length > 0}
@@ -111,7 +149,12 @@
 					{#each allWithEntries as day (day.date)}
 						{@const hours = entryHours(day.entry!)}
 						{@const isWeekend = day.dayOfWeek === 0 || day.dayOfWeek === 6}
-						<div class="flex items-center gap-2 py-1.5 text-xs">
+						{@const isSelected = selectedDates.has(day.date)}
+						<div
+							class="flex items-center gap-2 py-1.5 text-xs cursor-pointer transition-opacity {isSelected ? '' : 'opacity-30'}"
+							onclick={() => toggleDay(day.date)}
+						>
+							<span class="w-1.5 h-1.5 rounded-full flex-shrink-0 {isSelected ? 'bg-primary' : 'bg-base-content/20'}"></span>
 							<span class="w-7 font-semibold {isWeekend ? 'text-info' : 'text-base-content/40'}"
 								>{dayNames[day.dayOfWeek]}</span
 							>
@@ -127,8 +170,34 @@
 				<p class="text-sm text-base-content/40 text-center py-6">No shifts this week</p>
 			{/if}
 
+			<!-- Location picker -->
+			{#if showLocationPicker}
+				<div class="mt-4 space-y-2">
+					<p class="text-xs font-medium text-base-content/50 uppercase tracking-wide">Select location</p>
+					{#each locations as location}
+						<button
+							type="button"
+							class="btn btn-outline btn-sm w-full"
+							onclick={() => selectLocation(location)}
+						>{location}</button>
+					{/each}
+				</div>
+			{/if}
+
+			<!-- Invoice options -->
+			{#if selected.length > 0 && !showLocationPicker && weekends.length > 0 && weekdays.length > 0}
+				<label class="flex items-center justify-between cursor-pointer mt-4">
+					<span class="text-xs text-base-content/50">Split weekdays / weekends</span>
+					<input
+						type="checkbox"
+						class="toggle toggle-xs toggle-primary"
+						bind:checked={splitWeekends}
+					/>
+				</label>
+			{/if}
+
 			<!-- Generate Invoice button -->
-			{#if allWithEntries.length > 0}
+			{#if selected.length > 0 && !showLocationPicker}
 				<button type="button" class="btn btn-primary btn-sm w-full mt-5" onclick={generateInvoice}>
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
