@@ -16,6 +16,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 No test framework is configured.
 
+## Environments & deployment
+
+Production holds real invoices. Full runbook: [`ops/README.md`](ops/README.md). Rules:
+
+- **Production** is the "webserver" container: code in `/opt/wonga`, PM2 process `wonga` on port 3001, settings in `/etc/wonga/env`, data in `/var/lib/wonga/` (`wonga.db`, `uploads/`). **Development** is "devbox": `~/projects/wonga`, `npm run dev`.
+- Never `git pull && npm run build` inside `/opt/wonga` while the app is running. Build in a separate folder and swap `build/` in (see the runbook).
+- Build with `DATABASE_URL=:memory: npm run build`. The build opens `DATABASE_URL`, so this keeps it away from real data.
+- Run `wonga-backup predeploy` before any production change, and don't deploy between :00 and :10 (the invoice cron runs at :05).
+- Schema changes go through `db:generate` → review the SQL → commit → `drizzle-kit migrate` in production. Never `db:push` against production.
+- Uploads are read from `UPLOADS_DIR` via `uploadsDir()` in `src/lib/server/paths.ts`. Never build paths from `process.cwd()`.
+- Dev email goes to Mailpit (`localhost:1025`, inbox on port 8025). Never put real SMTP settings in a dev `.env`.
+- This repository is public: never commit secrets. Every setting is listed in `.env.example`.
+
 ## Architecture
 
 **Shyft** is a freelancer finance app (invoicing, income tracking, budgeting, timesheets) built with SvelteKit, Svelte 5, and SQLite.

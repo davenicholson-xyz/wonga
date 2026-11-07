@@ -1,0 +1,4 @@
+# root crontab on the webserver: hourly auto-send of due invoices.
+# Runs at :05; avoid deploying between :00 and :10.
+# <CRON_SECRET> is the value in /etc/wonga/env. Never commit the real key.
+5 * * * * curl -s "https://shyft.bodgelab.net/api/cron/send-invoices?key=<CRON_SECRET>" >/dev/null

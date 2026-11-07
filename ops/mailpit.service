@@ -1,0 +1,11 @@
+[Unit]
+Description=Mailpit - catches all email sent by the dev wonga app
+After=network.target
+
+[Service]
+User=mailpit
+ExecStart=/usr/local/bin/mailpit --database /var/lib/mailpit/mailpit.db --smtp 127.0.0.1:1025 --listen 0.0.0.0:8025 --smtp-tls-cert /etc/mailpit/cert.pem --smtp-tls-key /etc/mailpit/key.pem --smtp-require-tls --smtp-auth-accept-any --max 2000
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

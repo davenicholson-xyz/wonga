@@ -1,4 +1,4 @@
 #!/bin/sh
 set -e
-npx drizzle-kit push
+npx drizzle-kit migrate
 node build

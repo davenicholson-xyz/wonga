@@ -1,42 +1,28 @@
-# sv
+# Shyft (wonga)
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+A freelancer finance app for invoicing, timesheets, income and budgeting. Built with SvelteKit, Svelte 5,
+SQLite (better-sqlite3 + Drizzle ORM), Tailwind CSS 4 and DaisyUI 5.
 
-## Creating a project
-
-If you're seeing this, you've probably already done this step. Congrats!
-
-```sh
-# create a new project
-npx sv create my-app
-```
-
-To recreate this project with the same configuration:
+## Running it locally
 
 ```sh
-# recreate this project
-npx sv create --template minimal --types ts --add prettier eslint devtools-json drizzle="database:sqlite+sqlite:better-sqlite3" --install npm wonga
-```
-
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```sh
+cp .env.example .env    # dev settings; email goes to a local Mailpit, never a real server
+npm ci
+npm run db:migrate      # create the tables in a fresh local.db
 npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
 ```
 
-## Building
+## Useful commands
 
-To create a production version of your app:
+| Command                               | What it does                                                    |
+| ------------------------------------- | --------------------------------------------------------------- |
+| `npm run dev`                         | Dev server                                                      |
+| `npm run check`                       | Type-check                                                      |
+| `npm run lint`                        | Prettier + ESLint                                               |
+| `DATABASE_URL=:memory: npm run build` | Production build                                                |
+| `npm run db:generate`                 | Create a migration after changing `src/lib/server/db/schema.ts` |
+| `npm run db:migrate`                  | Apply migrations                                                |
 
-```sh
-npm run build
-```
+## Production
 
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+Releases, migrations, backups and restores are covered in [`ops/README.md`](ops/README.md).

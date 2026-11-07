@@ -1,0 +1,2 @@
+# Nightly wonga DB + uploads backup, before the 02:00 Proxmox vzdump picks it up
+30 1 * * * root /usr/local/sbin/wonga-backup nightly >/dev/null

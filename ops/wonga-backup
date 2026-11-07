@@ -1,0 +1,40 @@
+#!/bin/sh
+# Back up the wonga invoice database and uploads.
+# Usage: wonga-backup [label]     (label defaults to "nightly"; e.g. "predeploy")
+# Safe to run while the app is live: uses SQLite's online .backup.
+set -eu
+
+DB="${WONGA_DB:-/var/lib/wonga/wonga.db}"
+UPLOADS="${WONGA_UPLOADS:-/var/lib/wonga/uploads}"
+DEST="${WONGA_BACKUP_DIR:-/var/backups/wonga}"
+KEEP_DAYS="${WONGA_KEEP_DAYS:-60}"
+LABEL="${1:-nightly}"
+
+ts=$(date +%Y%m%d-%H%M%S)
+umask 077
+mkdir -p "$DEST"
+
+log() { echo "$*"; logger -t wonga-backup "$*" 2>/dev/null || true; }
+fail() { log "FAILED: $*"; rm -f "$tmp"; exit 1; }
+
+tmp="$DEST/.in-progress-$ts.db"
+out="$DEST/wonga-$ts-$LABEL.db"
+
+[ -f "$DB" ] || fail "database not found at $DB"
+sqlite3 "$DB" ".timeout 15000" ".backup '$tmp'" || fail "sqlite backup"
+check=$(sqlite3 "$tmp" "PRAGMA integrity_check;") || fail "integrity check could not run"
+[ "$check" = "ok" ] || fail "integrity check: $check"
+invoices=$(sqlite3 "$tmp" "SELECT COUNT(*) FROM invoice;")
+
+mv "$tmp" "$out"
+gzip -9 "$out"
+
+if [ -d "$UPLOADS" ]; then
+  tar -czf "$DEST/uploads-$ts-$LABEL.tar.gz" -C "$(dirname "$UPLOADS")" "$(basename "$UPLOADS")" \
+    || fail "uploads archive"
+fi
+
+find "$DEST" -maxdepth 1 -type f \( -name 'wonga-*.db.gz' -o -name 'uploads-*.tar.gz' \) \
+  -mtime +"$KEEP_DAYS" -delete
+
+log "ok: $out.gz ($invoices invoices)"
