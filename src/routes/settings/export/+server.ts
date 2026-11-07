@@ -1,5 +1,14 @@
 import { db } from '$lib/server/db';
-import { customer, invoice, income, settings, category, expense, timesheet } from '$lib/server/db/schema';
+import {
+	customer,
+	invoice,
+	income,
+	settings,
+	category,
+	expense,
+	timesheet,
+	shift_pattern
+} from '$lib/server/db/schema';
 import { json } from '@sveltejs/kit';
 
 export async function GET() {
@@ -12,7 +21,8 @@ export async function GET() {
 		settings: await db.select().from(settings),
 		categories: await db.select().from(category),
 		expenses: await db.select().from(expense),
-		timesheets: await db.select().from(timesheet)
+		timesheets: await db.select().from(timesheet),
+		shift_patterns: await db.select().from(shift_pattern)
 	};
 
 	return new Response(JSON.stringify(data, null, 2), {
