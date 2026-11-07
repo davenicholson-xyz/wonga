@@ -1,0 +1,28 @@
+#!/bin/sh
+# Run on the Proxmox host. Copies the newest production backup (database + uploads)
+# into ~/wonga-data on devbox, for testing against real data. Never touches production.
+# Use with: npm run dev:prod-data (dev email still goes to Mailpit).
+set -eu
+PROD_CT="${PROD_CT:-111}"; DEV_CT="${DEV_CT:-201}"; DEV_USER="${DEV_USER:-dave}"
+
+T=$(mktemp -d); trap 'rm -rf "$T"' EXIT
+db=$(pct exec "$PROD_CT" -- sh -c 'ls -t /var/backups/wonga/wonga-*.db.gz | head -1')
+up=$(pct exec "$PROD_CT" -- sh -c 'ls -t /var/backups/wonga/uploads-*.tar.gz | head -1')
+[ -n "$db" ] && [ -n "$up" ] || { echo "no backups found on CT $PROD_CT" >&2; exit 1; }
+pct pull "$PROD_CT" "$db" "$T/db.gz"
+pct pull "$PROD_CT" "$up" "$T/uploads.tar.gz"
+
+uid=$(pct exec "$DEV_CT" -- id -u "$DEV_USER")
+home=$(pct exec "$DEV_CT" -- getent passwd "$DEV_USER" | cut -d: -f6)
+D="$home/wonga-data"
+pct exec "$DEV_CT" -- install -d -m 700 -o "$uid" -g "$uid" "$D"
+pct push "$DEV_CT" "$T/db.gz" "$D/.incoming.db.gz" --user "$uid" --group "$uid" --perms 600
+pct push "$DEV_CT" "$T/uploads.tar.gz" "$D/.incoming-uploads.tar.gz" --user "$uid" --group "$uid" --perms 600
+
+pct exec "$DEV_CT" -- su "$DEV_USER" -s /bin/sh -c "set -e; cd '$D'
+gunzip -c .incoming.db.gz > .wonga.db.new && mv .wonga.db.new wonga.db
+rm -rf .uploads.new && mkdir .uploads.new && tar -xzf .incoming-uploads.tar.gz -C .uploads.new
+rm -rf uploads && mv .uploads.new/uploads uploads && rmdir .uploads.new
+rm -f .incoming.db.gz .incoming-uploads.tar.gz
+echo \"\$(date '+%F %T') from $(basename "$db")\" > REFRESHED"
+echo "devbox $D refreshed from $(basename "$db")"

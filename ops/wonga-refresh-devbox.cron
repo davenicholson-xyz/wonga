@@ -1,0 +1,2 @@
+# Proxmox host: refresh devbox's copy of production data after the 01:30 backup
+45 1 * * * root /usr/local/sbin/wonga-refresh-devbox >/dev/null

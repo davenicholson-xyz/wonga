@@ -1,0 +1,247 @@
+#!/bin/sh
+# wonga-deploy: build, rehearse and release a version of wonga, with automatic rollback.
+#
+#   wonga-deploy <git ref>              release a branch, tag or commit (main, v2026.11.07, 3642f57)
+#   wonga-deploy --rollback             switch back to the previous release (code only)
+#   wonga-deploy --rollback --restore-db
+#                                       ...and restore the database backup taken just before the
+#                                       current release (needed if it ran migrations; LOSES data
+#                                       written since that release)
+#   wonga-deploy --list                 show releases and recent deploys
+#
+# Layout: $ROOT/releases/<stamp>-<sha>/  one built copy per release
+#         $ROOT/current -> releases/...  the live one (PM2 runs from here)
+#         $ROOT/deploy.log               history
+# Data and settings live outside releases: /var/lib/wonga, /etc/wonga/env.
+#
+# Order of a release: clone + build (live untouched) -> rehearse on a copy of live data on a
+# spare port (live untouched) -> stop app -> backup -> migrate -> switch -> start -> health
+# check -> on failure: restore DB if migrations ran, switch back, start previous.
+#
+# Environment overrides (mainly for testing): WONGA_ROOT, WONGA_REPO, WONGA_ENV_FILE,
+# WONGA_PM2_NAME, WONGA_BACKUP_CMD, WONGA_TEST_PORT, WONGA_KEEP, WONGA_ALLOW_ANY_TIME=1
+# (skip the :00-:10 guard), WONGA_LEGACY_ECOSYSTEM (what to start if the very first release
+# fails), WONGA_SKIP_REHEARSAL=1 (only for testing the rollback path).
+set -eu
+
+ROOT="${WONGA_ROOT:-/srv/wonga}"
+REPO="${WONGA_REPO:-https://github.com/davenicholson-xyz/wonga.git}"
+ENV_FILE="${WONGA_ENV_FILE:-/etc/wonga/env}"
+APP="${WONGA_PM2_NAME:-wonga}"
+BACKUP="${WONGA_BACKUP_CMD:-/usr/local/sbin/wonga-backup}"
+TEST_PORT="${WONGA_TEST_PORT:-3097}"
+KEEP="${WONGA_KEEP:-5}"
+REL="$ROOT/releases"
+CUR="$ROOT/current"
+LOG="$ROOT/deploy.log"
+
+say() { echo "[$(date +%T)] $*"; }
+die() { say "ERROR: $*" >&2; exit 1; }
+log() { echo "$(date '+%F %T') $*" >>"$LOG"; }
+
+envval() { sed -n "s/^$1=//p" "$ENV_FILE" | tail -1 | sed -e 's/^"\(.*\)"$/\1/' -e "s/^'\(.*\)'$/\1/"; }
+[ -r "$ENV_FILE" ] || die "cannot read $ENV_FILE"
+DB=$(envval DATABASE_URL)
+UPLOADS=$(envval UPLOADS_DIR)
+PORT=$(envval PORT)
+[ -n "$DB" ] && [ -n "$UPLOADS" ] && [ -n "$PORT" ] || die "DATABASE_URL, UPLOADS_DIR and PORT must be set in $ENV_FILE"
+
+migrations_in_db() {
+	sqlite3 "$DB" "SELECT count(*) FROM sqlite_master WHERE name='__drizzle_migrations'" | grep -q 1 || { echo 0; return; }
+	sqlite3 "$DB" "SELECT count(*) FROM __drizzle_migrations"
+}
+
+# health <port> <db file>: home page answers, and the newest invoice page renders
+health() {
+	n=$(sqlite3 "$2" "SELECT max(invoice_number) FROM invoice" 2>/dev/null || true)
+	h=$(curl -s -o /dev/null -m 10 -w '%{http_code}' "http://127.0.0.1:$1/" || true)
+	i=skipped
+	[ -n "$n" ] && i=$(curl -s -o /dev/null -m 10 -w '%{http_code}' "http://127.0.0.1:$1/invoices/$n" || true)
+	HEALTH="home=$h invoice#${n:-none}=$i"
+	case "$h" in 2* | 3*) ;; *) return 1 ;; esac
+	[ "$i" = 200 ] || [ "$i" = skipped ]
+}
+wait_healthy() {
+	for _ in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do
+		if health "$1" "$2"; then say "healthy: $HEALTH"; return 0; fi
+		sleep 1
+	done
+	say "unhealthy: $HEALTH"
+	return 1
+}
+
+start_current() {
+	pm2 delete "$APP" >/dev/null 2>&1 || true
+	WONGA_ENV_FILE="$ENV_FILE" WONGA_PM2_NAME="$APP" pm2 start "$CUR/ecosystem.config.cjs" >/dev/null
+}
+switch_to() { # releases/<name>
+	ln -sfn "$1" "$ROOT/.current.new"
+	mv -T "$ROOT/.current.new" "$CUR"
+}
+restore_db() { # <backup.db.gz>
+	[ -f "$1" ] || die "backup $1 not found - restore by hand (see ops/README.md)"
+	cp -a "$DB" "$DB.before-restore-$(date +%Y%m%d-%H%M%S)"
+	gunzip -c "$1" >"$DB.restoring" && mv "$DB.restoring" "$DB"
+	say "database restored from $(basename "$1") (previous file kept as $DB.before-restore-*)"
+}
+info() { sed -n "s/^$2=//p" "$1/.deploy-info" 2>/dev/null; }
+
+prune() {
+	keep_cur=$(readlink "$CUR" | xargs basename)
+	keep_prev=$(info "$ROOT/$(readlink "$CUR")" previous | xargs -r basename)
+	ls -1 "$REL" | grep -v '^\.' | sort -r | tail -n +"$((KEEP + 1))" | while read -r r; do
+		[ "$r" = "$keep_cur" ] || [ "$r" = "$keep_prev" ] || { rm -rf "${REL:?}/$r"; say "pruned old release $r"; }
+	done
+}
+
+lock() {
+	mkdir -p "$REL"
+	exec 9>"$ROOT/.deploy.lock"
+	flock -n 9 || die "another wonga-deploy is running"
+}
+
+time_guard() {
+	[ "${WONGA_ALLOW_ANY_TIME:-}" = 1 ] && return 0
+	m=$(date +%M)
+	[ "$m" -ge 10 ] || die "it is :$m and the invoice cron runs at :05 - deploy after :10 (or set WONGA_ALLOW_ANY_TIME=1)"
+}
+
+do_list() {
+	cur=$(readlink "$CUR" 2>/dev/null | xargs -r basename)
+	echo "releases in $REL:"
+	ls -1 "$REL" 2>/dev/null | grep -v '^\.' | sort -r | while read -r r; do
+		mark="  "; [ "$r" = "$cur" ] && mark="* "
+		echo "$mark$r  ref=$(info "$REL/$r" ref) migrations=$(python3 -c 'import json,sys; print(len(json.load(open(sys.argv[1]))["entries"]))' "$REL/$r/drizzle/meta/_journal.json" 2>/dev/null)"
+	done
+	echo "database has $(migrations_in_db) migrations applied"
+	[ -f "$LOG" ] && { echo "recent deploys:"; tail -5 "$LOG"; }
+}
+
+do_rollback() {
+	restore="$1"
+	lock
+	cur=$(readlink "$CUR" 2>/dev/null) || die "no current release"
+	prev=$(info "$ROOT/$cur" previous)
+	[ -n "$prev" ] && [ -d "$ROOT/$prev" ] || die "no previous release recorded for $cur"
+	before=$(info "$ROOT/$cur" migrations_before)
+	backup=$(info "$ROOT/$cur" backup)
+	now=$(migrations_in_db)
+	if [ "$now" != "$before" ] && [ "$restore" != 1 ]; then
+		die "$cur applied $((now - before)) migration(s); the previous code expects the old schema.
+  Run 'wonga-deploy --rollback --restore-db' to also restore $backup
+  (data written since that release will be lost), or fix forward with a new release."
+	fi
+	say "rolling back $cur -> $prev"
+	pm2 stop "$APP" >/dev/null 2>&1 || true
+	if [ "$restore" = 1 ]; then
+		$BACKUP "before-rollback" >/dev/null || die "safety backup failed - app is stopped, start it with: pm2 start $APP"
+		restore_db "$backup"
+	fi
+	switch_to "$prev"
+	start_current
+	wait_healthy "$PORT" "$DB" || die "previous release is unhealthy too - check: pm2 logs $APP"
+	pm2 save >/dev/null
+	log "rolled back $cur -> $prev (db restored: $restore)"
+	say "rolled back to $prev"
+}
+
+do_deploy() {
+	ref="$1"
+	time_guard
+	lock
+	T=$(mktemp -d)
+	work="$REL/.building-$$"
+	trap 'rm -rf "$T" "$work"' EXIT
+
+	say "fetching $ref"
+	git clone -q "$REPO" "$work"
+	git -C "$work" checkout -q "$ref" 2>/dev/null || die "unknown ref: $ref"
+	sha=$(git -C "$work" rev-parse --short HEAD)
+	name="$(date +%Y%m%d-%H%M%S)-$sha"
+
+	if [ -e "$CUR" ] && [ -d "$CUR/node_modules" ] && cmp -s "$CUR/package-lock.json" "$work/package-lock.json"; then
+		say "dependencies unchanged: reusing node_modules"
+		cp -a "$CUR/node_modules" "$work/"
+	else
+		say "installing dependencies (npm ci)"
+		(cd "$work" && npm ci --no-audit --no-fund) >"$T/npm.log" 2>&1 || { tail -20 "$T/npm.log"; die "npm ci failed - live untouched"; }
+	fi
+	say "building"
+	(cd "$work" && DATABASE_URL=:memory: npm run build) >"$T/build.log" 2>&1 || { tail -30 "$T/build.log"; die "build failed - live untouched"; }
+
+	if [ "${WONGA_SKIP_REHEARSAL:-}" != 1 ]; then
+		say "rehearsing on a copy of live data (port $TEST_PORT)"
+		sqlite3 "$DB" ".timeout 15000" ".backup '$T/rehearsal.db'"
+		cp -a "$UPLOADS" "$T/uploads"
+		(cd "$work" && DATABASE_URL="$T/rehearsal.db" npx drizzle-kit migrate) >"$T/rmig.log" 2>&1 || { cat "$T/rmig.log"; die "migration failed on the copy - live untouched"; }
+		(cd "$work" && exec env DATABASE_URL="$T/rehearsal.db" UPLOADS_DIR="$T/uploads" PORT="$TEST_PORT" \
+			ORIGIN="http://localhost:$TEST_PORT" CRON_SECRET="rehearsal-$$" SMTP_HOST=127.0.0.1 SMTP_PORT=9 \
+			node build/index.js >"$T/rehearsal.log" 2>&1) &
+		rpid=$!
+		if ! wait_healthy "$TEST_PORT" "$T/rehearsal.db"; then
+			kill "$rpid" 2>/dev/null || true
+			tail -20 "$T/rehearsal.log"
+			die "rehearsal failed - live untouched"
+		fi
+		kill "$rpid" 2>/dev/null || true
+		wait "$rpid" 2>/dev/null || true
+	fi
+
+	mv "$work" "$REL/$name"
+	trap 'rm -rf "$T"' EXIT
+	prev=$(readlink "$CUR" 2>/dev/null || true)
+
+	say "stopping $APP"
+	pm2 stop "$APP" >/dev/null 2>&1 || true
+	out=$($BACKUP "predeploy-$sha") || { [ -n "$prev" ] && start_current; die "backup failed - previous release restarted"; }
+	backup=$(echo "$out" | sed -n 's/^ok: \([^ ]*\).*/\1/p')
+	before=$(migrations_in_db)
+	printf 'ref=%s\nsha=%s\nprevious=%s\nbackup=%s\nmigrations_before=%s\n' "$ref" "$sha" "$prev" "$backup" "$before" >"$REL/$name/.deploy-info"
+
+	failed=""
+	say "applying migrations"
+	if ! (cd "$REL/$name" && set -a && . "$ENV_FILE" && set +a && npx drizzle-kit migrate) >"$T/mig.log" 2>&1; then
+		cat "$T/mig.log"
+		failed="migration failed"
+	else
+		[ "$(migrations_in_db)" != "$before" ] && say "applied $(($(migrations_in_db) - before)) migration(s)"
+		switch_to "releases/$name"
+		say "starting $name"
+		start_current
+		wait_healthy "$PORT" "$DB" || failed="health check failed"
+	fi
+
+	if [ -z "$failed" ]; then
+		pm2 save >/dev/null
+		log "deployed $name (ref $ref) backup=$(basename "$backup")"
+		prune
+		say "released $name"
+		return 0
+	fi
+
+	say "$failed - rolling back"
+	pm2 logs "$APP" --lines 15 --nostream 2>/dev/null | tail -15 || true
+	pm2 stop "$APP" >/dev/null 2>&1 || true
+	[ "$(migrations_in_db)" != "$before" ] && restore_db "$backup"
+	if [ -n "$prev" ]; then
+		switch_to "$prev"
+		start_current
+	elif [ -n "${WONGA_LEGACY_ECOSYSTEM:-}" ]; then
+		rm -f "$CUR"
+		pm2 delete "$APP" >/dev/null 2>&1 || true
+		WONGA_ENV_FILE="$ENV_FILE" pm2 start "$WONGA_LEGACY_ECOSYSTEM" >/dev/null
+	else
+		die "$failed and there is no previous release to go back to - app is stopped"
+	fi
+	if wait_healthy "$PORT" "$DB"; then pm2 save >/dev/null; fi
+	log "FAILED $name (ref $ref): $failed - rolled back to ${prev:-legacy}"
+	die "$failed; rolled back to ${prev:-legacy}. The failed build is kept in $REL/$name"
+}
+
+case "${1:-}" in
+--list) do_list ;;
+--rollback) do_rollback "$([ "${2:-}" = --restore-db ] && echo 1 || echo 0)" ;;
+"" | -h | --help) sed -n '2,13p' "$0" ;;
+-*) die "unknown option $1" ;;
+*) do_deploy "$1" ;;
+esac
