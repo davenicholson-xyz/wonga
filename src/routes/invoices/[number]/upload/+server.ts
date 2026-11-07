@@ -1,3 +1,4 @@
+import { uploadsDir } from '$lib/server/paths';
 import { db } from '$lib/server/db';
 import { invoice, settings } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
@@ -28,9 +29,9 @@ export const POST: RequestHandler = async ({ params, request }) => {
 	if (!allowed.includes(ext)) throw error(400, 'Invalid file type. Allowed: jpg, png, webp');
 
 	const filename = `inv-${invoiceNumber}-timesheet.${ext}`;
-	const uploadsDir = join(process.cwd(), 'uploads');
+	const dir = uploadsDir();
 
-	await mkdir(uploadsDir, { recursive: true });
+	await mkdir(dir, { recursive: true });
 
 	const buffer = Buffer.from(await file.arrayBuffer());
 
@@ -45,7 +46,7 @@ export const POST: RequestHandler = async ({ params, request }) => {
 		.resize(maxDim, maxDim, { fit: 'inside', withoutEnlargement: true })
 		.toBuffer();
 
-	await writeFile(join(uploadsDir, filename), resizedBuffer);
+	await writeFile(join(dir, filename), resizedBuffer);
 
 	await db.update(invoice).set({ timesheet_image: filename }).where(eq(invoice.id, inv.id));
 

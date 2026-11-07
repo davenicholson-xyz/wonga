@@ -1,3 +1,4 @@
+import { uploadsDir } from '$lib/server/paths';
 import { db } from '$lib/server/db';
 import { customer, invoice, settings } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
@@ -53,7 +54,7 @@ export async function sendInvoiceEmail(invoice_number: number) {
 	];
 
 	if (inv.timesheet_image) {
-		const imagePath = join(process.cwd(), 'uploads', inv.timesheet_image);
+		const imagePath = join(uploadsDir(), inv.timesheet_image);
 		const imageBuffer = await readFile(imagePath);
 		const ext = inv.timesheet_image.split('.').pop()?.toLowerCase() ?? 'png';
 		const mimeType = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';

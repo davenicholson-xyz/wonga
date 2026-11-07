@@ -1,3 +1,4 @@
+import { uploadsDir } from '$lib/server/paths';
 import { error } from '@sveltejs/kit';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
@@ -18,7 +19,7 @@ export const GET: RequestHandler = async ({ params }) => {
 	if (!contentType) throw error(400, 'Unsupported file type');
 
 	try {
-		const filepath = join(process.cwd(), 'uploads', filename);
+		const filepath = join(uploadsDir(), filename);
 		const buffer = await readFile(filepath);
 
 		return new Response(buffer, {

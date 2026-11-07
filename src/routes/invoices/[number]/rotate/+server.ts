@@ -1,3 +1,4 @@
+import { uploadsDir } from '$lib/server/paths';
 import { db } from '$lib/server/db';
 import { invoice } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
@@ -19,8 +20,8 @@ export const POST: RequestHandler = async ({ params }) => {
 	if (!inv) throw error(404, 'Invoice not found');
 	if (!inv.timesheet_image) throw error(400, 'No timesheet image to rotate');
 
-	const uploadsDir = join(process.cwd(), 'uploads');
-	const imagePath = join(uploadsDir, inv.timesheet_image);
+	const dir = uploadsDir();
+	const imagePath = join(dir, inv.timesheet_image);
 
 	try {
 		// Read the existing image
