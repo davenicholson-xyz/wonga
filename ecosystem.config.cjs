@@ -26,7 +26,7 @@ for (const key of ['DATABASE_URL', 'UPLOADS_DIR', 'ORIGIN', 'CRON_SECRET']) {
 module.exports = {
 	apps: [
 		{
-			name: 'wonga',
+			name: process.env.WONGA_PM2_NAME || 'wonga',
 			script: './build/index.js',
 			cwd: __dirname,
 			env: { NODE_ENV: 'production', ...env },
