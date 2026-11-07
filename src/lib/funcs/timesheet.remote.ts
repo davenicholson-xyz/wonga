@@ -1,32 +1,21 @@
 import { command, form, query } from '$app/server';
-import { and, eq, gte, lt } from 'drizzle-orm';
+import { eq, like } from 'drizzle-orm';
 import { db } from '$lib/server/db';
 import { timesheet } from '$lib/server/db/schema';
 import * as v from 'valibot';
 
-function monthRangeFromDate(date: string) {
+// Timesheet dates are stored unpadded ("YYYY-M-D"), so a text range like
+// '2026-1-1'..'2026-2-1' would also match '2026-10-5'. Match the month prefix instead.
+function monthPatternFromDate(date: string) {
 	const [yearStr, monthStr] = date.split('-');
-	const year = Number(yearStr);
-	const month = Number(monthStr);
-
-	const start = `${yearStr}-${monthStr}-1`;
-
-	const nextMonth = month === 12 ? 1 : month + 1;
-	const nextYear = month === 12 ? year + 1 : year;
-
-	const end = `${nextYear}-${String(nextMonth)}-1`;
-
-	return { start, end };
+	return `${Number(yearStr)}-${Number(monthStr)}-%`;
 }
 
 export const get_timesheet_for_month = query(v.string(), async (date) => {
-	const { start, end } = monthRangeFromDate(date);
-	const timesheets = await db
+	return await db
 		.select()
 		.from(timesheet)
-		.where(and(gte(timesheet.date, start), lt(timesheet.date, end)));
-
-	return timesheets;
+		.where(like(timesheet.date, monthPatternFromDate(date)));
 });
 
 export const edit_timesheet = form(
