@@ -9,8 +9,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run check` - Type-check with svelte-check
 - `npm run lint` - Prettier + ESLint check
 - `npm run format` - Auto-format with Prettier
-- `npm run db:push` - Push schema changes to SQLite database
-- `npm run db:generate` - Generate Drizzle migrations
+- `npm run db:generate` - Generate a migration in `drizzle/` after changing `schema.ts` (review the SQL, commit it)
+- `npm run db:migrate` - Apply pending migrations (this is how production gets schema changes)
+- `npm run db:push` - Sync schema straight to a **local dev** database only; refused for production by `drizzle.config.ts`
 - `npm run db:studio` - Open Drizzle Studio database UI
 
 No test framework is configured.
